@@ -31,6 +31,8 @@ cors = CORS(
    app,
    supports_credentials=True,
    origins=[
+       'http://localhost:4700',
+       'http://127.0.0.1:4700',
        'http://localhost:4500',
        'http://127.0.0.1:4500',
        'http://localhost:4599',
