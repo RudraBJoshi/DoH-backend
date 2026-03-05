@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, Response, request
 from flask_login import LoginManager
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
@@ -46,6 +46,15 @@ cors = CORS(
    ],
    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"]
 )
+
+# Flask-RESTful returns 405 for OPTIONS before Flask-CORS can add headers.
+# Intercept all OPTIONS preflight requests here so CORS after_request can apply.
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = Response()
+        response.status_code = 200
+        return response
 
 
 # Admin Defaults
