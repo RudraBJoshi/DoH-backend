@@ -153,6 +153,7 @@ class User(db.Model, UserMixin):
     _role = db.Column(db.String(20), default="User", nullable=False)
     _pfp = db.Column(db.String(255), unique=False, nullable=True)
     kasm_server_needed = db.Column(db.Boolean, default=False)
+    totp_enabled = db.Column(db.Boolean, default=True)
     _grade_data = db.Column(db.JSON, unique=False, nullable=True)
     _ap_exam = db.Column(db.JSON, unique=False, nullable=True)
     _class = db.Column(db.JSON, unique=False, nullable=True)
@@ -170,13 +171,14 @@ class User(db.Model, UserMixin):
     personas = db.relationship('Persona', secondary='user_personas', lazy='subquery',
                                overlaps="user_personas_rel,persona,users")
     
-    def __init__(self, name, uid, password=app.config["DEFAULT_PASSWORD"], kasm_server_needed=False, role="User", pfp='', grade_data=None, ap_exam=None, school="Unknown", sid=None, classes=None):
+    def __init__(self, name, uid, password=app.config["DEFAULT_PASSWORD"], kasm_server_needed=False, totp_enabled=True, role="User", pfp='', grade_data=None, ap_exam=None, school="Unknown", sid=None, classes=None):
         self._name = name
         self._uid = uid
         self._email = "?"
         self._sid = sid
         self.set_password(password)
         self.kasm_server_needed = kasm_server_needed
+        self.totp_enabled = totp_enabled
         self._role = role
         self._pfp = pfp
         self._grade_data = grade_data if grade_data else {}
@@ -367,6 +369,7 @@ class User(db.Model, UserMixin):
             "pfp": self.pfp,
             "class": self._class if self._class is not None else [],
             "kasm_server_needed": self.kasm_server_needed,
+            "totp_enabled": self.totp_enabled,
             "grade_data": self.grade_data,
             "ap_exam": self.ap_exam,
             "password": self._password,  # Only for internal use, not for API
@@ -391,6 +394,7 @@ class User(db.Model, UserMixin):
         password = inputs.get("password", "")
         pfp = inputs.get("pfp", None)
         kasm_server_needed = inputs.get("kasm_server_needed", None)
+        totp_enabled = inputs.get("totp_enabled", None)
         grade_data = inputs.get("grade_data", None)
         ap_exam = inputs.get("ap_exam", None)
         class_list = inputs.get("class", None) or inputs.get("_class", None)
@@ -414,6 +418,8 @@ class User(db.Model, UserMixin):
             self.pfp = pfp
         if kasm_server_needed is not None:
             self.kasm_server_needed = bool(kasm_server_needed)
+        if totp_enabled is not None:
+            self.totp_enabled = bool(totp_enabled)
         if grade_data is not None:
             self.grade_data = grade_data
         if ap_exam is not None:

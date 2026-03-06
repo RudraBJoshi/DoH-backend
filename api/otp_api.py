@@ -61,6 +61,9 @@ class OTPApi:
             if not user or not user.is_password(password):
                 return {'message': 'Invalid email or password'}, 401
 
+            if not getattr(user, 'totp_enabled', True):
+                return _issue_jwt_response(user)
+
             otp = str(random.randint(100000, 999999))
             _otp_store[email] = {
                 'otp': otp,
