@@ -5,6 +5,12 @@
 <div class="container mt-5">
     <h1>Section Management</h1>
 
+    <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+        <span style="font-size:1.4rem;">🚧</span>
+        <div><strong>Under Construction</strong> — Section management is temporarily disabled.</div>
+    </div>
+
+    {# TABLE DISABLED — restore by removing the comment tags below
     <table class="table table-striped" id="sectionsTable">
         <thead>
             <tr>
@@ -31,13 +37,14 @@
         </tbody>
     </table>
 
-    <!-- Add New Section Button -->
     {% if current_user.role == 'Admin' %}
     <button class="btn btn-success" id="addSectionBtn">Add New Section</button>
     {% endif %}
+    #}
 </div>
 
 <script>
+    /* DISABLED — restore when section management is re-enabled
     $(document).ready(function () {
         // Initialize DataTables
         $("#sectionsTable").DataTable();
@@ -117,6 +124,7 @@
             });
         });
     });
+    */
 </script>
 
 {% endblock %}
