@@ -51,18 +51,22 @@ class OTPApi:
     class _Send(Resource):
         def post(self):
             body = request.get_json() or {}
-            email = body.get('email', '').strip().lower()
+            uid = body.get('uid', '').strip()
             password = body.get('password', '')
 
-            if not email or not password:
-                return {'message': 'Email and password are required'}, 400
+            if not uid or not password:
+                return {'message': 'Username and password are required'}, 400
 
-            user = User.query.filter_by(_email=email).first()
+            user = User.query.filter_by(_uid=uid).first()
             if not user or not user.is_password(password):
-                return {'message': 'Invalid email or password'}, 401
+                return {'message': 'Invalid username or password'}, 401
 
             if not getattr(user, 'totp_enabled', True):
                 return _issue_jwt_response(user)
+
+            email = user._email
+            if not email or email == '?':
+                return {'message': 'No email address on file for this account'}, 400
 
             otp = str(random.randint(100000, 999999))
             _otp_store[email] = {
@@ -76,7 +80,7 @@ class OTPApi:
             if not smtp_user or not smtp_pass:
                 # Dev mode: print to console instead of sending
                 print(f"[OTP DEV] Code for {email}: {otp}")
-                return {'message': 'OTP printed to server console (SMTP not configured)'}, 200
+                return {'message': 'OTP printed to server console (SMTP not configured)', 'email': email}, 200
 
             try:
                 msg = MIMEText(
@@ -99,15 +103,23 @@ class OTPApi:
     class _Verify(Resource):
         def post(self):
             body = request.get_json() or {}
-            email = body.get('email', '').strip().lower()
+            uid = body.get('uid', '').strip()
             otp = str(body.get('otp', '')).strip()
 
-            if not email or not otp:
-                return {'message': 'Email and code are required'}, 400
+            if not uid or not otp:
+                return {'message': 'Username and code are required'}, 400
+
+            user = User.query.filter_by(_uid=uid).first()
+            if not user:
+                return {'message': 'User not found'}, 404
+
+            email = user._email
+            if not email or email == '?':
+                return {'message': 'No email address on file for this account'}, 400
 
             stored = _otp_store.get(email)
             if not stored:
-                return {'message': 'No pending code for this email. Request a new one.'}, 400
+                return {'message': 'No pending code for this account. Request a new one.'}, 400
 
             if datetime.now() > stored['expires']:
                 _otp_store.pop(email, None)
@@ -117,11 +129,6 @@ class OTPApi:
                 return {'message': 'Invalid code'}, 401
 
             _otp_store.pop(email, None)
-
-            user = User.query.filter_by(_email=email).first()
-            if not user:
-                return {'message': 'User not found'}, 404
-
             return _issue_jwt_response(user)
 
     class _GoogleLogin(Resource):

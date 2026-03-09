@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/rudra/coding/Tri3/**)"
+    ],
+    "additionalDirectories": [
+      "/home/rudra/coding/Tri3/MalwareMadness/navigation/authentication"
+    ]
+  }
+}
