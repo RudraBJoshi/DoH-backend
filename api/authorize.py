@@ -45,6 +45,11 @@ def auth_required(roles=None):
             # Method 2: Fall back to JWT token authentication
             else:
                 token = request.cookies.get(current_app.config.get("JWT_TOKEN_NAME"))
+                # Also check Authorization: Bearer <token> header
+                if not token:
+                    auth_header = request.headers.get("Authorization", "")
+                    if auth_header.startswith("Bearer "):
+                        token = auth_header[7:]
                 if not token:
                     return {
                         "message": "Authentication required. No session or token found.",
