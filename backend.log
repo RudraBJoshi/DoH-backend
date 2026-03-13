@@ -24,3 +24,16 @@
 127.0.0.1 - - [12/Mar/2026 21:28:48] "OPTIONS /api/game/save HTTP/1.1" 200 -
 127.0.0.1 - - [12/Mar/2026 21:28:48] "POST /api/game/save HTTP/1.1" 200 -
 127.0.0.1 - - [12/Mar/2026 21:28:50] "GET /api/game/list HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:00] "OPTIONS /api/id HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:00] "GET /api/id HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:00] "OPTIONS /api/user/class HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:00] "GET /api/user/class HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:03] "GET /api/game/list HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:05] "GET /api/game/load/1 HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:08] "GET /api/game/list HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:10] "GET /api/game/load/2 HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:20] "OPTIONS /api/game/save HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:20] "POST /api/game/save HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:22] "GET /api/game/list HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:25] "OPTIONS /api/game/delete/3 HTTP/1.1" 200 -
+127.0.0.1 - - [12/Mar/2026 21:42:25] "DELETE /api/game/delete/3 HTTP/1.1" 200 -
