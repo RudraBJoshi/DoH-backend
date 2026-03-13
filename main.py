@@ -302,9 +302,10 @@ def delete_user_kasm(user_id):
 
 
 @app.route('/update_user/<string:uid>', methods=['PUT'])
+@login_required
 def update_user(uid):
     # Authorization check
-    if current_user.role != 'Admin':
+    if not current_user.is_admin():
         return jsonify({'error': 'Unauthorized'}), 403
 
     # Get the JSON data from the request
