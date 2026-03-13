@@ -58,8 +58,8 @@ class OTPApi:
             if not identifier or not password:
                 return {'message': 'Email/username and password are required'}, 400
 
-            # Look up by email first, then fall back to uid
-            user = User.query.filter_by(_email=identifier).first()
+            # Look up OTP-affiliated account by email first, then fall back to uid
+            user = User.query.filter_by(_email=identifier, _auth_type='otp').first()
             if not user:
                 user = User.query.filter_by(_uid=identifier).first()
             if not user or not user.is_password(password):
@@ -160,7 +160,7 @@ class OTPApi:
             if not email:
                 return {'message': 'Could not extract email from Google credential'}, 400
 
-            user = User.query.filter_by(_email=email).first()
+            user = User.query.filter_by(_email=email, _auth_type='google').first()
             if not user:
                 return {
                     'message': 'No account found for this Google email. Please sign up first.',

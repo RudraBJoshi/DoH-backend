@@ -158,6 +158,7 @@ class User(db.Model, UserMixin):
     _ap_exam = db.Column(db.JSON, unique=False, nullable=True)
     _class = db.Column(db.JSON, unique=False, nullable=True)
     _school = db.Column(db.String(255), default="Unknown", nullable=True)
+    _auth_type = db.Column(db.String(20), default="otp", nullable=False)
 
     # Define many-to-many relationship with Section model through UserSection table
     # Overlaps setting silences SQLAlchemy warnings about multiple relationship paths
@@ -171,7 +172,7 @@ class User(db.Model, UserMixin):
     personas = db.relationship('Persona', secondary='user_personas', lazy='subquery',
                                overlaps="user_personas_rel,persona,users")
     
-    def __init__(self, name, uid, password=app.config["DEFAULT_PASSWORD"], kasm_server_needed=False, totp_enabled=True, role="User", pfp='', grade_data=None, ap_exam=None, school="Unknown", sid=None, classes=None):
+    def __init__(self, name, uid, password=app.config["DEFAULT_PASSWORD"], kasm_server_needed=False, totp_enabled=True, role="User", pfp='', grade_data=None, ap_exam=None, school="Unknown", sid=None, classes=None, auth_type="otp"):
         self._name = name
         self._uid = uid
         self._email = "?"
@@ -187,6 +188,7 @@ class User(db.Model, UserMixin):
         # keep it as a JSON column in the DB
         self._class = classes if classes is not None else []
         self._school = school
+        self._auth_type = auth_type
 
     # UserMixin/Flask-Login requires a get_id method to return the id as a string
     def get_id(self):
@@ -370,6 +372,7 @@ class User(db.Model, UserMixin):
             "class": self._class if self._class is not None else [],
             "kasm_server_needed": self.kasm_server_needed,
             "totp_enabled": self.totp_enabled,
+            "auth_type": self._auth_type,
             "grade_data": self.grade_data,
             "ap_exam": self.ap_exam,
             "password": self._password,  # Only for internal use, not for API
@@ -399,6 +402,7 @@ class User(db.Model, UserMixin):
         ap_exam = inputs.get("ap_exam", None)
         class_list = inputs.get("class", None) or inputs.get("_class", None)
         school = inputs.get("school", None)
+        auth_type = inputs.get("auth_type", None)
         # States before update
         old_uid = self.uid
         old_kasm_server_needed = self.kasm_server_needed
@@ -432,6 +436,8 @@ class User(db.Model, UserMixin):
                 self._class = class_list
         if school is not None:
             self.school = school
+        if auth_type is not None:
+            self._auth_type = auth_type
 
         # Check this on each update
         if not email:

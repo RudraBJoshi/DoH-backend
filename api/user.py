@@ -1,6 +1,7 @@
 import jwt
 from flask import Blueprint, app, request, jsonify, current_app, Response, g
 from flask_restful import Api, Resource # used for REST API building
+from flask_login import logout_user
 from datetime import datetime
 from __init__ import app, db
 from api.authorize import token_required
@@ -122,6 +123,8 @@ class UserAPI:
                 cleaned_body['school'] = body.get('school')
             if body.get('kasm_server_needed') is not None:
                 cleaned_body['kasm_server_needed'] = body.get('kasm_server_needed')
+            if body.get('auth_type') is not None:
+                cleaned_body['auth_type'] = body.get('auth_type')
             # Support assigning classes (e.g. ["CSSE","CSP","CSA"]).
             # Accept either a list or a single string.
             if body.get('class') is not None:
@@ -441,7 +444,8 @@ class UserAPI:
                             }, 500
                  
         def delete(self):
-            ''' Clear the JWT cookie to log out — no token required '''
+            ''' Clear the JWT cookie and Flask-Login session to log out — no token required '''
+            logout_user()
             resp = Response("Logged out successfully")
             is_production = os.environ.get('IS_PRODUCTION', 'false').lower() == 'true'
             if is_production:
