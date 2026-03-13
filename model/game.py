@@ -10,18 +10,22 @@ class Game(db.Model):
     __tablename__ = 'games'
 
     id         = Column(Integer, primary_key=True)
-    user_id    = Column(Integer, ForeignKey('users.id'), unique=True, nullable=False)
-    game_data  = Column(Text, nullable=False)           # full JSON blob
+    user_id    = Column(Integer, ForeignKey('users.id'), nullable=False)   # no unique — many games per user
+    name       = Column(String(200), nullable=False, default='Untitled')
+    game_data  = Column(Text, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    def __init__(self, user_id, game_data):
-        self.user_id   = user_id
-        self.game_data = game_data
+    def __init__(self, user_id, name, game_data):
+        self.user_id    = user_id
+        self.name       = name
+        self.game_data  = game_data
         self.updated_at = datetime.utcnow()
 
     def to_dict(self):
         return {
+            'id':         self.id,
             'user_id':    self.user_id,
+            'name':       self.name,
             'game_data':  self.game_data,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
         }

@@ -28,6 +28,7 @@ from hacks.joke import joke_api  # Import the joke API blueprint
 from api.post import post_api  # Import the social media post API
 from api.otp_api import otp_api
 from api.game_api import game_api
+from api.game_social_api import game_social_api
 #from api.announcement import announcement_api ##temporary revert
 
 # database Initialization functions
@@ -44,6 +45,8 @@ from model.classroom import Classroom
 from model.persona import Persona, initPersonas, initPersonaUsers
 from model.post import Post, init_posts
 from model.game import Game
+from model.game_score import GameScore
+from model.game_comment import GameComment
 from model.microblog import MicroBlog, Topic, initMicroblogs
 from hacks.jokes import initJokes 
 # from model.announcement import Announcement ##temporary revert
@@ -84,11 +87,20 @@ app.register_blueprint(joke_api)  # Register the joke API blueprint
 app.register_blueprint(post_api)  # Register the social media post API
 app.register_blueprint(otp_api)
 app.register_blueprint(game_api)
+app.register_blueprint(game_social_api)
 # app.register_blueprint(announcement_api) ##temporary revert
 
 # Startup initialization — create tables and seed default data on first run
 with app.app_context():
-    db.create_all()   # creates any missing tables (e.g. games) without dropping existing ones
+    # Migrate games table: if the old schema (no 'name' column) is present, drop and recreate
+    from sqlalchemy import inspect, text
+    _inspector = inspect(db.engine)
+    if 'games' in _inspector.get_table_names():
+        _cols = [c['name'] for c in _inspector.get_columns('games')]
+        if 'name' not in _cols:
+            db.session.execute(text('DROP TABLE games'))
+            db.session.commit()
+    db.create_all()   # creates any missing tables (including new games schema)
     if User.query.count() == 0:
         initUsers()   # only seed on first run — avoids duplicate/integrity errors on restart
     initJokes()
