@@ -1,20 +1,21 @@
 #!/bin/bash
+set -e
+cd "$(dirname "$0")"
 
-# Quick script to run the Flask backend
+echo "Starting MalwareMadness backend..."
 
-echo "🚀 Starting Flask Backend..."
-
-# Activate virtual environment
-if [ -d "venv" ]; then
-    source venv/bin/activate
-    echo "✓ Virtual environment activated"
-else
-    echo "❌ Virtual environment not found! Run setup_and_run.sh first"
-    exit 1
+# Create venv + install deps if missing
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv venv
+    echo "Installing dependencies..."
+    venv/bin/pip install --quiet Flask Flask-Login Flask-SQLAlchemy Flask-Migrate \
+        Flask-RESTful Flask-Cors PyJWT python-dotenv Werkzeug requests pymysql
+    echo "Done."
 fi
 
-# Run the Flask app
-echo "✓ Starting Flask on http://localhost:8587"
+source venv/bin/activate
+echo "Backend running at http://localhost:8800"
 echo ""
 python main.py
 

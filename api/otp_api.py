@@ -51,22 +51,27 @@ class OTPApi:
     class _Send(Resource):
         def post(self):
             body = request.get_json() or {}
-            uid = body.get('uid', '').strip()
+            # Accept 'email' (login form) or 'uid' (API/legacy) as the identifier
+            identifier = (body.get('email') or body.get('uid') or '').strip()
             password = body.get('password', '')
 
-            if not uid or not password:
-                return {'message': 'Username and password are required'}, 400
+            if not identifier or not password:
+                return {'message': 'Email/username and password are required'}, 400
 
-            user = User.query.filter_by(_uid=uid).first()
+            # Look up by email first, then fall back to uid
+            user = User.query.filter_by(_email=identifier).first()
+            if not user:
+                user = User.query.filter_by(_uid=identifier).first()
             if not user or not user.is_password(password):
-                return {'message': 'Invalid username or password'}, 401
+                return {'message': 'Invalid email/username or password'}, 401
 
             if not getattr(user, 'totp_enabled', True):
                 return _issue_jwt_response(user)
 
             email = user._email
+            # No email on file — skip OTP and issue JWT directly
             if not email or email == '?':
-                return {'message': 'No email address on file for this account'}, 400
+                return _issue_jwt_response(user)
 
             otp = str(random.randint(100000, 999999))
             _otp_store[email] = {
@@ -103,13 +108,17 @@ class OTPApi:
     class _Verify(Resource):
         def post(self):
             body = request.get_json() or {}
-            uid = body.get('uid', '').strip()
+            # Accept 'email' (login form) or 'uid' (API/legacy)
+            identifier = (body.get('email') or body.get('uid') or '').strip()
             otp = str(body.get('otp', '')).strip()
 
-            if not uid or not otp:
-                return {'message': 'Username and code are required'}, 400
+            if not identifier or not otp:
+                return {'message': 'Email/username and code are required'}, 400
 
-            user = User.query.filter_by(_uid=uid).first()
+            # Look up by email first, then uid
+            user = User.query.filter_by(_email=identifier).first()
+            if not user:
+                user = User.query.filter_by(_uid=identifier).first()
             if not user:
                 return {'message': 'User not found'}, 404
 
@@ -181,7 +190,7 @@ class OTPApi:
 
             if not smtp_user or not smtp_pass:
                 print(f"[OTP DEV] Signup code for {email}: {otp}")
-                return {'message': 'OTP printed to server console (SMTP not configured)'}, 200
+                return {'message': 'Dev mode: use the code below (SMTP not configured)', 'dev_otp': otp}, 200
 
             try:
                 msg = MIMEText(
