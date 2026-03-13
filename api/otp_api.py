@@ -83,9 +83,9 @@ class OTPApi:
             smtp_pass = os.environ.get('SMTP_PASSWORD')
 
             if not smtp_user or not smtp_pass:
-                # Dev mode: print to console instead of sending
                 print(f"[OTP DEV] Code for {email}: {otp}")
-                return {'message': 'OTP printed to server console (SMTP not configured)', 'email': email}, 200
+                return {'message': 'Dev mode: use the code below (SMTP not configured)',
+                        'dev_otp': otp, 'email': email}, 200
 
             try:
                 msg = MIMEText(
