@@ -84,8 +84,7 @@ class OTPApi:
 
             if not smtp_user or not smtp_pass:
                 print(f"[OTP DEV] Code for {email}: {otp}")
-                return {'message': 'Dev mode: use the code below (SMTP not configured)',
-                        'dev_otp': otp, 'email': email}, 200
+                return {'message': 'Verification code sent to your email'}, 200
 
             try:
                 msg = MIMEText(
@@ -190,7 +189,7 @@ class OTPApi:
 
             if not smtp_user or not smtp_pass:
                 print(f"[OTP DEV] Signup code for {email}: {otp}")
-                return {'message': 'Dev mode: use the code below (SMTP not configured)', 'dev_otp': otp}, 200
+                return {'message': 'Verification code sent to your email'}, 200
 
             try:
                 msg = MIMEText(
