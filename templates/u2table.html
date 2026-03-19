@@ -2,6 +2,7 @@
 
 {% block style %}
 <style>
+    /* --- Page header --- */
     .mm-page-header {
         font-family: 'Orbitron', sans-serif;
         color: #00ff41;
@@ -10,68 +11,235 @@
         text-shadow: 0 0 12px #00ff41;
         margin-bottom: 4px;
     }
-    .mm-page-sub { color: #00ff4188; font-size: 0.8rem; margin-bottom: 24px; }
-    .img-thumbnail { border: 1px solid #00ff4144 !important; background-color: #0a0a0a !important; }
+    .mm-page-sub { color: #00ff4188; font-size: 0.8rem; margin-bottom: 20px; }
+    .mm-cursor { animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* --- Stats bar --- */
+    .mm-stats-bar { display: flex; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+    .mm-stat-chip {
+        background: var(--mm-dark-panel);
+        border: 1px solid var(--mm-border);
+        padding: 6px 14px;
+        font-size: 0.72rem;
+        letter-spacing: 1px;
+        color: #aaffbb;
+    }
+    .mm-stat-chip span {
+        color: var(--mm-green);
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.95rem;
+        margin-left: 6px;
+    }
+    .mm-stat-chip.mm-stat-danger span { color: var(--mm-red); }
+
+    /* --- Role badges --- */
+    .mm-role-badge {
+        display: inline-block;
+        padding: 2px 9px;
+        font-size: 0.65rem;
+        letter-spacing: 1.5px;
+        font-family: 'Orbitron', sans-serif;
+        border: 1px solid;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .mm-role-admin   { color: #ff2442; border-color: #ff2442; background: #ff244215; }
+    .mm-role-teacher { color: #ffaa00; border-color: #ffaa00; background: #ffaa0015; }
+    .mm-role-user    { color: #00c832; border-color: #00c832; background: #00c83215; }
+
+    /* --- Status pills --- */
+    .mm-status-wrap { display: flex; flex-direction: column; gap: 4px; }
+    .mm-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.65rem;
+        letter-spacing: 1px;
+        padding: 3px 8px;
+        border: 1px solid;
+        white-space: nowrap;
+        background: transparent;
+        font-family: 'Share Tech Mono', monospace;
+        line-height: 1;
+    }
+    .mm-pill-on     { color: #00ff41; border-color: #00ff4155; background: #00ff4110; }
+    .mm-pill-off    { color: #555;    border-color: #33333355; background: transparent; cursor: pointer; }
+    .mm-pill-danger { color: #ff2442; border-color: #ff244255; background: #ff244210; cursor: pointer; }
+    button.mm-status-pill:hover { opacity: 0.8; }
+    button.mm-status-pill:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* --- Avatar --- */
+    .mm-avatar {
+        width: 40px; height: 40px;
+        border: 1px solid #00ff4133;
+        object-fit: cover;
+        background: #0a0a0a;
+    }
+
+    /* --- Icon action buttons --- */
+    .mm-action-group { display: flex; gap: 5px; align-items: center; }
+    .mm-icon-btn {
+        background: transparent;
+        border: 1px solid;
+        width: 30px; height: 30px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+        padding: 0;
+    }
+    .mm-icon-btn-edit   { color: #00ff41; border-color: #00ff41; }
+    .mm-icon-btn-edit:hover   { background: #00ff41; color: #000; }
+    .mm-icon-btn-delete { color: #ff2442; border-color: #ff2442; }
+    .mm-icon-btn-delete:hover { background: #ff2442; color: #000; }
+    .mm-icon-btn-reset  { color: #ffaa00; border-color: #ffaa00; }
+    .mm-icon-btn-reset:hover  { background: #ffaa00; color: #000; }
+
+    /* --- Table column sizing --- */
+    #userTable td { vertical-align: middle; }
+    #userTable th { font-family: 'Orbitron', sans-serif; font-size: 0.65rem; letter-spacing: 1.5px; }
+
+    /* --- Edit modal identity header --- */
+    .mm-modal-uid {
+        font-size: 0.7rem;
+        color: #00ff4166;
+        letter-spacing: 2px;
+        margin-top: 2px;
+    }
+    .mm-modal-avatar {
+        width: 48px; height: 48px;
+        border: 1px solid #00ff4133;
+        object-fit: cover;
+        background: #0a0a0a;
+    }
+
+    /* --- Confirm modal --- */
+    #confirmModal .modal-content { border-color: #ff244255 !important; }
+    .mm-confirm-icon { font-size: 2rem; text-align: center; margin-bottom: 10px; }
+    .mm-confirm-msg  { font-size: 0.88rem; color: #aaffbb; text-align: center; }
+    .mm-confirm-sub  { font-size: 0.72rem; color: #555; text-align: center; margin-top: 4px; }
 </style>
 {% endblock %}
 
 {% block body %}
+{% set admin_count   = user_data | selectattr('role', 'eq', 'Admin')   | list | length %}
+{% set teacher_count = user_data | selectattr('role', 'eq', 'Teacher') | list | length %}
+{% set user_count    = user_data | selectattr('role', 'eq', 'User')    | list | length %}
+{% set dev_on_count  = user_data | rejectattr('totp_enabled')           | list | length %}
 
 <div class="container mt-5">
-    <h1 class="mm-page-header">&#128100; USER MANAGEMENT</h1>
+    <h1 class="mm-page-header">USER MANAGEMENT<span class="mm-cursor">_</span></h1>
     <p class="mm-page-sub">// Manage registered agents and their access levels</p>
 
-    <table class="table table-striped" id="userTable">
+    <!-- Stats bar -->
+    <div class="mm-stats-bar">
+        <div class="mm-stat-chip">TOTAL AGENTS <span>{{ user_data | length }}</span></div>
+        <div class="mm-stat-chip">ADMINS <span>{{ admin_count }}</span></div>
+        <div class="mm-stat-chip">TEACHERS <span>{{ teacher_count }}</span></div>
+        <div class="mm-stat-chip">USERS <span>{{ user_count }}</span></div>
+        <div class="mm-stat-chip mm-stat-danger">DEV MODE ON <span>{{ dev_on_count }}</span></div>
+    </div>
+
+    <!-- User table -->
+    <table class="table" id="userTable">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>UID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Profile Picture</th>
-                <th>Sections</th>
-                <th>Actions</th>
+                <th></th>
+                <th>AGENT</th>
+                <th>EMAIL</th>
+                <th>ROLE</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
             </tr>
         </thead>
         <tbody>
             {% for user in user_data %}
             {% if user.id == current_user.id or current_user.role == 'Admin' %}
-            <tr id="user-{{ user.id }}">
-                <td>{{ user.id }}</td>
-                <td>{{ user.uid }}</td>
-                <td>{{ user.name }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.role }}</td>
+            {% set pfp_url = url_for('uploaded_file', filename=user.uid + '/' + user.pfp) if user.pfp else url_for('static', filename='assets/pythondb.png') %}
+            <tr id="user-{{ user.id }}"
+                data-id="{{ user.id }}"
+                data-uid="{{ user.uid }}"
+                data-name="{{ user.name }}"
+                data-email="{{ user.email }}"
+                data-pfp="{{ pfp_url }}">
+
+                <!-- Avatar -->
+                <td><img src="{{ pfp_url }}" class="mm-avatar" alt="{{ user.name }}"></td>
+
+                <!-- Agent: Name + UID -->
                 <td>
-                    {% if user.pfp %}
-                    <img src="{{ url_for('uploaded_file', filename=user.uid + '/' + user.pfp) }}"
-                         alt="Profile Picture"
-                         class="img-thumbnail"
-                         style="width: 50px; height: 50px;">
+                    <div style="font-weight:bold; color:#00ff41;">{{ user.name }}</div>
+                    <div style="font-size:0.7rem; color:#00ff4166; letter-spacing:1px;">{{ user.uid }}</div>
+                </td>
+
+                <!-- Email -->
+                <td style="font-size:0.85rem;">{{ user.email }}</td>
+
+                <!-- Role badge -->
+                <td>
+                    {% if user.role == 'Admin' %}
+                    <span class="mm-role-badge mm-role-admin">Admin</span>
+                    {% elif user.role == 'Teacher' %}
+                    <span class="mm-role-badge mm-role-teacher">Teacher</span>
                     {% else %}
-                    <img src="{{ url_for('static', filename='assets/pythondb.png') }}"
-                         alt="Default Profile Picture"
-                         class="img-thumbnail"
-                         style="width: 50px; height: 50px;">
+                    <span class="mm-role-badge mm-role-user">User</span>
                     {% endif %}
                 </td>
+
+                <!-- Status: KASM pill + Dev Mode toggle -->
                 <td>
-                    <span class="text-muted fst-italic" title="Coming soon">🚧 Under Construction</span>
-                    {# {% for section in user.sections %}
-                    {{ section.abbreviation }}{% if not loop.last %}, {% endif %}
-                    {% endfor %} #}
+                    <div class="mm-status-wrap">
+                        <!-- KASM (display only) -->
+                        <span class="mm-status-pill {% if user.kasm_server_needed %}mm-pill-on{% else %}mm-pill-off{% endif %}" style="cursor:default;">
+                            <i class="fas fa-server fa-xs"></i> KASM
+                        </span>
+                        <!-- Dev Mode toggle -->
+                        {% if current_user.role == 'Admin' %}
+                        <button class="mm-status-pill mm-dev-toggle {% if not user.totp_enabled %}mm-pill-danger{% else %}mm-pill-off{% endif %}"
+                                data-uid="{{ user.uid }}"
+                                data-totp="{{ 'true' if user.totp_enabled else 'false' }}"
+                                title="{{ 'DEV MODE ON — click to disable' if not user.totp_enabled else 'DEV MODE OFF — click to enable' }}">
+                            <i class="fas fa-bug fa-xs"></i>
+                            <span>{{ 'DEV ON' if not user.totp_enabled else 'DEV OFF' }}</span>
+                        </button>
+                        {% else %}
+                        <span class="mm-status-pill {% if not user.totp_enabled %}mm-pill-danger{% else %}mm-pill-off{% endif %}" style="cursor:default;">
+                            <i class="fas fa-bug fa-xs"></i> {{ 'DEV ON' if not user.totp_enabled else 'DEV OFF' }}
+                        </span>
+                        {% endif %}
+                    </div>
                 </td>
+
+                <!-- Actions -->
                 <td>
-                    <button class="btn btn-primary edit-btn"
-                            data-id="{{ user.id }}"
-                            data-uid="{{ user.uid }}"
-                            data-name="{{ user.name }}"
-                            data-email="{{ user.email }}">Edit</button>
-                    {% if current_user.role == 'Admin' %}
-                    <button class="btn btn-danger delete-btn" data-id="{{ user.id }}">Delete</button>
-                    <button class="btn btn-warning reset-password-btn" data-id="{{ user.id }}">Reset Password</button>
-                    {% endif %}
+                    <div class="mm-action-group">
+                        <button class="mm-icon-btn mm-icon-btn-edit edit-btn"
+                                title="Edit Agent"
+                                data-id="{{ user.id }}"
+                                data-uid="{{ user.uid }}"
+                                data-name="{{ user.name }}"
+                                data-email="{{ user.email }}"
+                                data-pfp="{{ pfp_url }}">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        {% if current_user.role == 'Admin' %}
+                        <button class="mm-icon-btn mm-icon-btn-reset reset-password-btn"
+                                title="Reset Password"
+                                data-id="{{ user.id }}"
+                                data-name="{{ user.name }}">
+                            <i class="fas fa-key"></i>
+                        </button>
+                        <button class="mm-icon-btn mm-icon-btn-delete delete-btn"
+                                title="Delete Agent"
+                                data-id="{{ user.id }}"
+                                data-name="{{ user.name }}">
+                            <i class="fas fa-skull"></i>
+                        </button>
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {% endif %}
@@ -82,181 +250,293 @@
 
 <!-- Edit Modal -->
 <div class="modal fade" id="editModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" style="font-family:'Orbitron',sans-serif;color:#00ff41;letter-spacing:2px;font-size:0.95rem;">&#9998; EDIT AGENT</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" style="font-family:'Orbitron',sans-serif;color:#00ff41;letter-spacing:2px;font-size:0.9rem;">
+                    <i class="fas fa-pen me-2"></i>EDIT AGENT
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                <!-- Identity header -->
+                <div class="d-flex align-items-center gap-3 mb-3 pb-3" style="border-bottom:1px solid #00ff4133;">
+                    <img id="editAvatar" src="" class="mm-modal-avatar" alt="Agent">
+                    <div>
+                        <div style="font-family:'Orbitron',sans-serif;font-size:0.82rem;color:#00ff41;" id="editDisplayName"></div>
+                        <div class="mm-modal-uid" id="editDisplayUid"></div>
+                    </div>
+                </div>
                 <input type="hidden" id="editUid">
                 <div class="mb-3">
-                    <label class="form-label">Name</label>
-                    <input type="text" class="form-control" id="editName">
+                    <label class="form-label" style="font-size:0.72rem;letter-spacing:1px;">NAME</label>
+                    <input type="text" class="form-control" id="editName" autocomplete="off">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" id="editEmail">
+                    <label class="form-label" style="font-size:0.72rem;letter-spacing:1px;">EMAIL</label>
+                    <input type="email" class="form-control" id="editEmail" autocomplete="off">
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Password <small class="text-muted">(leave blank to keep current)</small></label>
-                    <input type="password" class="form-control" id="editPassword" placeholder="New password">
+                    <label class="form-label" style="font-size:0.72rem;letter-spacing:1px;">
+                        NEW PASSWORD
+                        <small style="color:#555;font-size:0.68rem;"> — leave blank to keep current</small>
+                    </label>
+                    <input type="password" class="form-control" id="editPassword" placeholder="••••••••" autocomplete="new-password">
                 </div>
-                <div id="editMsg" class="alert d-none"></div>
+                <div id="editMsg" class="alert d-none" style="font-size:0.8rem;"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveEditBtn">Save</button>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" id="saveEditBtn">
+                    <i class="fas fa-save me-1"></i>Save Changes
+                </button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Confirm Modal (reusable) -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content">
+            <div class="modal-body pt-4 pb-2 px-4">
+                <div class="mm-confirm-icon" id="confirmIcon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="mm-confirm-msg" id="confirmMsg">Are you sure?</div>
+                <div class="mm-confirm-sub" id="confirmSub"></div>
+            </div>
+            <div class="modal-footer justify-content-center border-0 pt-2 pb-3">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-sm" id="confirmActionBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast (replaces alert()) -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:11000;">
+    <div id="mmToast" class="toast align-items-center" role="alert"
+         style="background:#0d1117; border:1px solid #00ff4133; color:#00ff41; min-width:260px;">
+        <div class="d-flex">
+            <div class="toast-body" id="mmToastBody" style="font-size:0.82rem; font-family:'Share Tech Mono',monospace;"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
 <script>
-    $(document).ready(function () {
-        // Initialize DataTables
-        const table =  $("#userTable").DataTable(); // repersents table
+$(document).ready(function () {
 
-        table.page.len(-1).draw();  // shows all users and commits
-        // Function to fetch commits (DISABLED)
-        /*
-        async function fetchAdminData(userUid) {
-            const commitsElement = $(`#commits-${userUid}`);
-
-            if (!commitsElement.length) return;
-
-            const today = new Date();
-            const startDate = new Date();
-            startDate.setDate(today.getDate() - 30);
-
-            const formattedStartDate = startDate.toISOString().split('T')[0];
-            const formattedEndDate = today.toISOString().split('T')[0];
-
-            try {
-                const response = await fetch(`/api/analytics/commits/${userUid}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ start_date: formattedStartDate, end_date: formattedEndDate })
-                });
-
-                if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-
-                const data = await response.json();
-                commitsElement.text(data.commits?.total_commit_contributions || "0");
-
-            } catch (error) {
-                console.error("Error:", error);
-            }
+    // --- DataTables ---
+    const table = $("#userTable").DataTable({
+        columnDefs: [
+            { orderable: false, targets: [0, 5] }
+        ],
+        language: {
+            search:     "// FILTER:",
+            lengthMenu: "SHOW _MENU_ AGENTS",
+            info:       "// AGENTS _START_–_END_ OF _TOTAL_",
+            paginate:   { previous: "< PREV", next: "NEXT >" },
+            zeroRecords: "// NO AGENTS FOUND"
         }
-        */
+    });
+    table.page.len(-1).draw();
 
-        // Batch processing with delay (DISABLED)
-        /*
-        async function processUsersWithDelay() {
-            const users = $("[id^='commits-']");
-            console.log(`Total users found: ${users.length}`);
+    // --- Bootstrap tooltips ---
+    document.querySelectorAll('[title]').forEach(el => {
+        new bootstrap.Tooltip(el, { trigger: 'hover', placement: 'top' });
+    });
 
-            for (let i = 0; i < users.length; i++) {
-                const userUid = users[i].id.split("-")[1];
+    // --- Toast helper ---
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById('mmToast');
+        const body  = document.getElementById('mmToastBody');
+        body.textContent      = msg;
+        toast.style.borderColor = isError ? '#ff244255' : '#00ff4133';
+        body.style.color        = isError ? '#ff2442'   : '#00ff41';
+        new bootstrap.Toast(toast, { delay: 3500 }).show();
+    }
 
-                await fetchAdminData(userUid);
+    // --- Confirm modal helper (Promise-based) ---
+    function showConfirm(opts) {
+        return new Promise(resolve => {
+            document.getElementById('confirmMsg').textContent  = opts.msg     || 'Are you sure?';
+            document.getElementById('confirmSub').textContent  = opts.sub     || '';
+            document.getElementById('confirmIcon').innerHTML   = `<i class="${opts.icon || 'fas fa-exclamation-triangle'}" style="color:${opts.iconColor || '#ff2442'}; text-shadow:0 0 14px ${opts.iconColor || '#ff2442'};"></i>`;
 
-                if ((i + 1) % 15 === 0) {
-                    console.log(`Pausing for 5 seconds...`);
-                    await new Promise(resolve => setTimeout(resolve, 4000)); // tinker this however depending on rate limiting
-                } else {
-                    console.log(`Waiting for 2 seconds...`);
-                    await new Promise(resolve => setTimeout(resolve, 100));  // tinker this however depending on rate limiting
-                }
-            }
+            const oldBtn = document.getElementById('confirmActionBtn');
+            const btn    = oldBtn.cloneNode(true);
+            oldBtn.parentNode.replaceChild(btn, oldBtn);
 
-            table.page.len(10).draw();  
-        }
-        */
+            btn.textContent = opts.btnText  || 'Confirm';
+            btn.className   = `btn btn-sm ${opts.btnClass || 'btn-danger'}`;
 
-        // Start processing users with a delay (DISABLED)
-        // processUsersWithDelay();
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
 
-        // Handle edit action — open modal with current values
-        document.querySelectorAll(".edit-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                document.getElementById("editUid").value   = this.dataset.uid;
-                document.getElementById("editName").value  = this.dataset.name;
-                document.getElementById("editEmail").value = this.dataset.email;
-                document.getElementById("editPassword").value = "";
-                const msg = document.getElementById("editMsg");
-                msg.className = "alert d-none";
-                msg.textContent = "";
-                new bootstrap.Modal(document.getElementById("editModal")).show();
-            });
+            btn.addEventListener('click', () => { modal.hide(); resolve(true); },  { once: true });
+            document.getElementById('confirmModal').addEventListener('hidden.bs.modal',
+                () => resolve(false), { once: true });
+
+            modal.show();
         });
+    }
 
-        document.getElementById("saveEditBtn").addEventListener("click", function () {
-            const uid      = document.getElementById("editUid").value;
-            const name     = document.getElementById("editName").value.trim();
-            const email    = document.getElementById("editEmail").value.trim();
-            const password = document.getElementById("editPassword").value;
-            const msg      = document.getElementById("editMsg");
+    // --- Edit button ---
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            document.getElementById('editUid').value         = this.dataset.uid;
+            document.getElementById('editName').value        = this.dataset.name;
+            document.getElementById('editEmail').value       = this.dataset.email;
+            document.getElementById('editPassword').value    = '';
+            document.getElementById('editDisplayName').textContent = this.dataset.name;
+            document.getElementById('editDisplayUid').textContent  = '// ' + this.dataset.uid;
+            document.getElementById('editAvatar').src        = this.dataset.pfp;
 
-            const body = { name, email };
-            if (password) body.password = password;
+            const msg = document.getElementById('editMsg');
+            msg.className   = 'alert d-none';
+            msg.textContent = '';
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        });
+    });
 
-            fetch(`/update_user/${uid}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body)
+    // --- Save edit ---
+    document.getElementById('saveEditBtn').addEventListener('click', function () {
+        const uid      = document.getElementById('editUid').value;
+        const name     = document.getElementById('editName').value.trim();
+        const email    = document.getElementById('editEmail').value.trim();
+        const password = document.getElementById('editPassword').value;
+        const msg      = document.getElementById('editMsg');
+
+        if (!name || !email) {
+            msg.className   = 'alert alert-danger';
+            msg.textContent = '// Name and email cannot be empty.';
+            return;
+        }
+
+        const body = { name, email };
+        if (password) body.password = password;
+
+        this.disabled  = true;
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+
+        fetch(`/update_user/${uid}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(body)
+        })
+        .then(r => r.json())
+        .then(data => {
+            msg.className   = 'alert alert-success';
+            msg.textContent = data.message || 'Agent updated successfully.';
+            setTimeout(() => location.reload(), 900);
+        })
+        .catch(() => {
+            msg.className   = 'alert alert-danger';
+            msg.textContent = '// Error updating agent.';
+            this.disabled   = false;
+            this.innerHTML  = '<i class="fas fa-save me-1"></i>Save Changes';
+        });
+    });
+
+    // --- Delete button ---
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', async function () {
+            const id   = this.dataset.id;
+            const name = this.dataset.name;
+
+            const confirmed = await showConfirm({
+                msg:       `Terminate agent "${name}"?`,
+                sub:       `This action cannot be undone. ID: ${id}`,
+                btnText:   'TERMINATE',
+                btnClass:  'btn-danger',
+                icon:      'fas fa-skull',
+                iconColor: '#ff2442'
+            });
+            if (!confirmed) return;
+
+            fetch(`/users/delete/${id}`, {
+                method:  'DELETE',
+                headers: { 'Content-Type': 'application/json' }
             })
             .then(r => r.json())
             .then(data => {
-                msg.className = "alert alert-success";
-                msg.textContent = data.message || "User updated successfully.";
-                setTimeout(() => location.reload(), 1000);
+                showToast(data.message || 'Agent terminated.');
+                const row = document.getElementById(`user-${id}`);
+                if (row) table.row(row).remove().draw(false);
             })
-            .catch(() => {
-                msg.className = "alert alert-danger";
-                msg.textContent = "Error updating user.";
-            });
-        });
-
-        // Handle delete action
-        document.querySelectorAll(".delete-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                const id = this.dataset.id;
-                fetch(`/users/delete/${id}`, {
-                    method: "DELETE",
-                    headers: { "Content-Type": "application/json" },
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message || "User deleted successfully.");
-                        location.reload();
-                    })
-                    .catch(error => {
-                        console.error("Error deleting user:", error);
-                        alert("Error deleting user.");
-                    });
-            });
-        });
-
-        // Handle reset password action
-        document.querySelectorAll(".reset-password-btn").forEach(button => {
-            button.addEventListener("click", function () {
-                const id = this.dataset.id;
-                fetch(`/users/reset_password/${id}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message || "Password reset successfully.");
-                    })
-                    .catch(error => {
-                        console.error("Error resetting password:", error);
-                        alert("Error resetting password.");
-                    });
-            });
+            .catch(() => showToast('Error terminating agent.', true));
         });
     });
+
+    // --- Reset password button ---
+    document.querySelectorAll('.reset-password-btn').forEach(button => {
+        button.addEventListener('click', async function () {
+            const id   = this.dataset.id;
+            const name = this.dataset.name;
+
+            const confirmed = await showConfirm({
+                msg:       `Reset password for "${name}"?`,
+                sub:       'Password will be set to the system default.',
+                btnText:   'RESET',
+                btnClass:  'btn-warning',
+                icon:      'fas fa-key',
+                iconColor: '#ffaa00'
+            });
+            if (!confirmed) return;
+
+            fetch(`/users/reset_password/${id}`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => showToast(data.message || 'Password reset successfully.'))
+            .catch(() => showToast('Error resetting password.', true));
+        });
+    });
+
+    // --- Dev Mode toggle ---
+    document.querySelectorAll('.mm-dev-toggle').forEach(button => {
+        button.addEventListener('click', async function () {
+            const uid        = this.dataset.uid;
+            const currentVal = this.dataset.totp === 'true';
+            const newVal     = !currentVal;
+
+            const origHTML = this.innerHTML;
+            this.innerHTML  = '<i class="fas fa-spinner fa-spin fa-xs"></i>';
+            this.disabled   = true;
+
+            try {
+                const r = await fetch('/api/user', {
+                    method:  'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body:    JSON.stringify({ uid, totp_enabled: newVal })
+                });
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
+                this.dataset.totp  = String(newVal);
+                this.innerHTML     = `<i class="fas fa-bug fa-xs"></i><span>${newVal ? 'DEV OFF' : 'DEV ON'}</span>`;
+                this.className     = this.className
+                    .replace(/mm-pill-danger|mm-pill-off/g, '').trim()
+                    + (newVal ? ' mm-pill-off' : ' mm-pill-danger');
+                this.title         = newVal
+                    ? 'DEV MODE OFF — click to enable'
+                    : 'DEV MODE ON — click to disable';
+                showToast(
+                    newVal ? `OTP enabled for ${uid}` : `Dev mode ON for ${uid} — OTP bypassed`,
+                    !newVal
+                );
+            } catch (e) {
+                console.error('Dev mode toggle failed:', e);
+                this.innerHTML = origHTML;
+                showToast('Failed to update dev mode.', true);
+            } finally {
+                this.disabled = false;
+            }
+        });
+    });
+
+});
 </script>
 
 {% endblock %}
