@@ -723,38 +723,19 @@ def initUsers():
 
 def ensure_admin():
     """
-    Guarantee that a hardcoded 'admin' superuser always exists in the database.
+    Enforce that the configured admin account (ADMIN_UID) always has dev mode on.
 
-    - If the user with uid='admin' is not present, it is created with:
-        name:         admin
-        uid:          admin
-        password:     sUP3rSeCr3T
-        role:         Admin
-        totp_enabled: False  (dev mode — OTP skipped at login)
-
-    - If the user already exists, dev mode is enforced (totp_enabled=False reset
-      in case someone accidentally toggled it on through the UI).
-
-    Call this once inside an app context on every startup (after db.create_all).
+    initUsers() handles creation on first run. This function runs on every startup
+    and guarantees totp_enabled=False stays set for the admin — in case someone
+    accidentally toggled it off via the UI.
     """
     with app.app_context():
-        admin = User.query.filter_by(_uid='admin').first()
+        admin_uid = app.config.get('ADMIN_UID', 'admin')
+        admin = User.query.filter_by(_uid=admin_uid).first()
         if admin is None:
-            admin_user = User(
-                name='admin',
-                uid='admin',
-                password='sUP3rSeCr3T',
-                role='Admin',
-                totp_enabled=False,
-            )
-            result = admin_user.create()
-            if result:
-                print('[MM] Default admin user created (uid=admin, dev mode ON)')
-            else:
-                print('[MM] WARNING: Failed to create default admin user')
-        else:
-            # Enforce dev mode stays on for the admin account
-            if admin.totp_enabled:
-                admin.totp_enabled = False
-                db.session.commit()
-                print('[MM] Admin dev mode re-enabled (was toggled off)')
+            print(f'[MM] WARNING: Admin user "{admin_uid}" not found in database')
+            return
+        if admin.totp_enabled:
+            admin.totp_enabled = False
+            db.session.commit()
+            print(f'[MM] Admin dev mode re-enabled for "{admin_uid}"')
