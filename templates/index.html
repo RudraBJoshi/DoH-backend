@@ -1,64 +1,130 @@
 {% extends "layouts/base.html" %}
 {% set project = "Home" %}
 
+{% block style %}
+<style>
+    .mm-hero {
+        padding: 60px 40px 20px;
+    }
+    .mm-hero h1 {
+        font-family: 'Orbitron', sans-serif;
+        font-size: 2.4rem;
+        font-weight: 900;
+        color: #00ff41;
+        text-shadow: 0 0 20px #00ff41, 0 0 40px #00ff4155;
+        letter-spacing: 3px;
+    }
+    .mm-hero .subtitle {
+        color: #aaffbb;
+        font-size: 0.95rem;
+        margin-bottom: 40px;
+    }
+    .mm-card {
+        background-color: #0d1117 !important;
+        border: 1px solid #00ff4133 !important;
+        border-top: 3px solid #00ff41 !important;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .mm-card:hover {
+        border-color: #00ff41 !important;
+        box-shadow: 0 0 18px #00ff4133;
+    }
+    .mm-card .card-header {
+        background-color: #00ff410d;
+        border-bottom: 1px solid #00ff4133;
+        color: #00ff41;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        padding: 8px 16px;
+    }
+    .mm-card .card-body {
+        color: #aaffbb;
+        font-size: 0.88rem;
+    }
+    .mm-card .card-title {
+        color: #00ff41 !important;
+        font-size: 1rem;
+        font-family: 'Orbitron', sans-serif;
+        letter-spacing: 1px;
+    }
+    .mm-card ol li { margin-bottom: 6px; }
+    .mm-card .btn {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+    }
+    .mm-status-bar {
+        font-size: 0.75rem;
+        color: #00ff4188;
+        margin-bottom: 30px;
+        border-left: 2px solid #00ff41;
+        padding-left: 10px;
+    }
+    .blink { animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+</style>
+{% endblock %}
+
 {% block body %}
-    <!-- Start of body content specific to page -->
-    <div class="px-5 py-5 mx-auto">
-        <h1 class="text-white"><strong>Python Home Page</strong></h1>
-        <div class="row">
-            <div class="col-4">
-                <div class="card">
-                    <img class="card-img-top" src="{{ url_for('static', filename='assets/python.jpeg') }}" alt="Python Development" height="250">
-                    <div class="card-body">
-                    <h5 class="card-title">What should <mark>Student Developers learn</mark>?</h5>
-                    <p class="card-text">
-                        <ol>
-                            <li>Python 3.12 is used for most of our backend PBL. HTML, CSS, JavaScript will be used in frontend</li>
-                            <li>Visuals Studio Code (VS Code) is the primary editor, Interactive Development Environment (IDE).</li>
-                            <li>GitHub.  Managing and sharing code change, branches, pull requests, issues, and more will be through GitHub.</li>
-                            <li>DevOps. Python programmers should have a passion for managing the environment and learning automation (Git, Linux, Bash, Python Packages, Docker).</li>
-                            <li>API and Microservice using Flask.  Mastering development techniques in creating and consuming RESTful APIs</li>
-                        </ol>
-                    </p>
-                    <a href="#" class="btn btn-primary">Go somewhere</a>
-                    </div>
+<div class="mm-hero">
+    <h1>&#9760; MALWARE MADNESS</h1>
+    <p class="subtitle">// Backend Admin Panel &mdash; Authorized Access Only <span class="blink">_</span></p>
+    <p class="mm-status-bar">
+        SYSTEM STATUS: <span style="color:#00ff41;">ONLINE</span> &nbsp;|&nbsp;
+        ENV: PRODUCTION &nbsp;|&nbsp;
+        FRAMEWORK: Flask + SQLAlchemy
+    </p>
+
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card mm-card h-100">
+                <div class="card-header">&#128187; STACK</div>
+                <div class="card-body">
+                    <h5 class="card-title">Tech Stack</h5>
+                    <ol class="card-text">
+                        <li>Python 3.12 powers the backend API and game logic</li>
+                        <li>VS Code is the primary IDE for development</li>
+                        <li>GitHub for version control, branches, and pull requests</li>
+                        <li>DevOps with Git, Linux, Bash, Docker for automation</li>
+                        <li>RESTful API design with Flask Blueprints</li>
+                    </ol>
+                    <a href="{{ url_for('u2table') }}" class="btn btn-primary mt-2">User Management &rarr;</a>
                 </div>
             </div>
-            <div class="col-4">
-                <div class="card">
-                    <img class="card-img-top" src="{{ url_for('static', filename='assets/flask.png') }}" alt="Flask Development" height="250">
-                    <div class="card-body">
-                    <h5 class="card-title">What is <mark>Flask</mark>? How do I start Web development?</h5>
-                    <p class="card-text">
-                        <ol>
-                            <li>Flask Framework is the popular Web Application development framework of Python.</li>
-                            <li>Blueprint is Python technique to help abstract complexity, moving information into independent files and directories. Blueprints are intended to encapsulate feature-sized sections of our application into well organized files.</li>
-                            <li>HTML using Bootstrap is a great way to build interesting pages and reduce CSS</li>
-                            <li>Jinja2 is a server-side Python like template engine, supports HTML5 web development, and provides full integration with Flask.</li>
-                        </ol>
-                    </p>
-                    <a href="#" class="btn btn-primary">Go somewhere</a>
-                    </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mm-card h-100">
+                <div class="card-header">&#9881; FRAMEWORK</div>
+                <div class="card-body">
+                    <h5 class="card-title">Flask Backend</h5>
+                    <ol class="card-text">
+                        <li>Flask is the Python web framework driving this admin panel</li>
+                        <li>Blueprints keep game logic, auth, and data endpoints modular</li>
+                        <li>Jinja2 templates render server-side HTML with live data</li>
+                        <li>Bootstrap 5 keeps the UI responsive with minimal overhead</li>
+                    </ol>
+                    <a href="{{ url_for('kasm_users') }}" class="btn btn-primary mt-2">Kasm Report &rarr;</a>
                 </div>
             </div>
-            <div class="col-4">
-                <div class="card">
-                    <img class="card-img-top" src="{{ url_for('static', filename='assets/pythondb.png') }}" alt="Backend and Persistence" height="250">
-                    <div class="card-body">
-                    <h5 class="card-title">How do you manage <mark>Persistent data</mark> with Python?</h5>
-                    <p class="card-text">
-                        <ol>
-                            <li>A Database is an example of persistent data that is held on a computer.  Programming languages and frameworks allow you to store and retrive data.</li>
-                            <li>SQL stands for Structured Query Language · SQL lets you access and manipulate databases and has become a long lasting development standard.</li>
-                            <li>SQLAlchemy is the Python SQL toolkit and Object Relational Mapper (ORM) that gives application developers the full power and flexibility of SQL.</li>
-                            <li>There are many newer and sometimes easier Database languages and frameworks.  Mongo, DynamoDB, Neo4J are Databases being used by students developers in last 3 years.</li>
-                        </ol>
-                    </p>
-                    <a href="#" class="btn btn-primary">Go somewhere</a>
-                    </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mm-card h-100">
+                <div class="card-header">&#128200; DATABASE</div>
+                <div class="card-body">
+                    <h5 class="card-title">Persistent Data</h5>
+                    <ol class="card-text">
+                        <li>SQLAlchemy ORM maps Python classes to database tables</li>
+                        <li>SQL gives the game full power to query and manipulate records</li>
+                        <li>User roles, sections, and personas are all persisted here</li>
+                        <li>Supports migration-friendly schema design with Flask-Migrate</li>
+                    </ol>
+                    <a href="{{ url_for('sections') }}" class="btn btn-primary mt-2">Sections &rarr;</a>
                 </div>
             </div>
-            
         </div>
     </div>
+</div>
 {% endblock %}

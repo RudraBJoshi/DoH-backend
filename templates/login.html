@@ -1,42 +1,123 @@
 {% extends "layouts/base.html" %}
 {% set project = "Login" %}
 
-{% block body %}
-    <!-- Start of body content specific to page -->
-    <div class="px-5 py-5 mx-auto">
-        <div class="container py-4">
-            <header class="pb-3 mb-4 border-bottom border-primary text-light">
-                <span class="fs-4">Login Page</span>
-            </header>
-        </div>
-    
-        <div class="container py-4 text-light bg-primary">
-    
-            <div class="container bg-secondary py-4">
-                <div class="p-5 mb-4 bg-light text-dark rounded-3">
-                    <form name="f" action="{{ url_for('login') }}" method="POST">
-                        <table>
-                            {% if error %}
-                                <tr class="alert alert-error">
-                                    Invalid username and password.
-                                </tr>
-                            {% endif %}
-                            {% if logout %}
-                                <tr class="alert alert-success">
-                                    You have been logged out.
-                                </tr>
-                            {% endif %}
-                            <tr><th><label for="username">User ID</label></th></tr>
-                            <tr><td><input id='username' name="username" size="20" required></td></tr>
-                            <tr><th><label for="password">Password</label></th></tr>
-                            <tr><td><input type="password" id="password" name="password" size="20" required></td></tr>
-                            <!-- Hidden input for 'next' page, which is set on unauthorized redirects -->
-                            <input type="hidden" name="next" value="{{ next }}">
-                            <tr><th><input type="submit" value="Submit"></th></tr>
-                        </table>
-                    </form>
-                </div>
+{% block style %}
+<style>
+    .mm-login-wrap {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .mm-login-box {
+        background-color: #0d1117;
+        border: 1px solid #00ff4155;
+        border-top: 3px solid #00ff41;
+        padding: 40px 48px;
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 0 30px #00ff4122;
+    }
+    .mm-login-box h2 {
+        font-family: 'Orbitron', sans-serif;
+        color: #00ff41;
+        font-size: 1.3rem;
+        letter-spacing: 3px;
+        text-shadow: 0 0 10px #00ff41;
+        margin-bottom: 4px;
+    }
+    .mm-login-box .prompt {
+        color: #00ff4188;
+        font-size: 0.8rem;
+        margin-bottom: 28px;
+    }
+    .mm-login-box label {
+        color: #aaffbb;
+        font-size: 0.82rem;
+        margin-bottom: 4px;
+        display: block;
+    }
+    .mm-login-box input[type="text"],
+    .mm-login-box input[type="password"] {
+        width: 100%;
+        background-color: #0a0a0a;
+        border: 1px solid #00ff4144;
+        color: #00ff41;
+        font-family: 'Share Tech Mono', monospace;
+        padding: 8px 12px;
+        margin-bottom: 18px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        border-radius: 3px;
+    }
+    .mm-login-box input:focus {
+        border-color: #00ff41;
+        box-shadow: 0 0 8px #00ff4155;
+    }
+    .mm-login-box input[type="submit"] {
+        width: 100%;
+        background-color: transparent;
+        border: 1px solid #00ff41;
+        color: #00ff41;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 2px;
+        padding: 10px;
+        cursor: pointer;
+        transition: background-color 0.2s, color 0.2s;
+        border-radius: 3px;
+        margin-top: 6px;
+    }
+    .mm-login-box input[type="submit"]:hover {
+        background-color: #00ff41;
+        color: #000;
+    }
+    .mm-alert-error {
+        color: #ff2442;
+        background-color: #2a000a;
+        border: 1px solid #ff244244;
+        padding: 8px 12px;
+        margin-bottom: 16px;
+        font-size: 0.82rem;
+        border-radius: 3px;
+    }
+    .mm-alert-success {
+        color: #00ff41;
+        background-color: #001a08;
+        border: 1px solid #00ff4144;
+        padding: 8px 12px;
+        margin-bottom: 16px;
+        font-size: 0.82rem;
+        border-radius: 3px;
+    }
+    .blink { animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+</style>
+{% endblock %}
 
-        </div>
+{% block body %}
+<div class="mm-login-wrap">
+    <div class="mm-login-box">
+        <h2>&#9760; ACCESS TERMINAL</h2>
+        <p class="prompt">// Enter credentials to authenticate <span class="blink">_</span></p>
+
+        {% if error %}
+        <div class="mm-alert-error">&#10007; Invalid username or password. Access denied.</div>
+        {% endif %}
+        {% if logout %}
+        <div class="mm-alert-success">&#10003; Session terminated. You have been logged out.</div>
+        {% endif %}
+
+        <form name="f" action="{{ url_for('login') }}" method="POST">
+            <label for="username">USER ID</label>
+            <input type="text" id="username" name="username" placeholder="enter user id..." required>
+
+            <label for="password">PASSWORD</label>
+            <input type="password" id="password" name="password" placeholder="enter password..." required>
+
+            <input type="hidden" name="next" value="{{ next }}">
+            <input type="submit" value="AUTHENTICATE">
+        </form>
     </div>
+</div>
 {% endblock %}

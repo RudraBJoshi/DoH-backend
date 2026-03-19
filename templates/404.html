@@ -2,16 +2,16 @@
 {% set project = "404" %}
 
 {% block body %}
-    <div class="index">
-        <div class="center-block" style="margin: 2% 10% 10%; font-family: gilroy,serif;">
-            <div class="col-12" style="text-align: center;">
-                <h1><strong>Something Went Wrong, 404 Not Found</strong></h1>
-            </div>
-
-            <div class="jumbotron jumbotron-fluid" style="text-align: center; ">
-                <h2>Engineering is on the case!</h2>
-                <a href="/">Go Home</a>
-            </div>
+    <div style="min-height:80vh; display:flex; align-items:center; justify-content:center; text-align:center; font-family:'Share Tech Mono',monospace;">
+        <div>
+            <div style="font-size:5rem; color:#ff2442; text-shadow: 0 0 20px #ff2442; font-family:'Orbitron',sans-serif; font-weight:900;">404</div>
+            <div style="font-size:1.1rem; color:#00ff41; letter-spacing:3px; margin-bottom:12px; font-family:'Orbitron',sans-serif;">SIGNAL LOST</div>
+            <p style="color:#aaffbb; font-size:0.9rem;">// The page you requested could not be found on this system.</p>
+            <a href="/" style="color:#00ff41; border:1px solid #00ff41; padding:8px 24px; text-decoration:none; font-family:'Orbitron',sans-serif; font-size:0.8rem; letter-spacing:2px; transition:all 0.2s;"
+               onmouseover="this.style.background='#00ff41';this.style.color='#000'"
+               onmouseout="this.style.background='transparent';this.style.color='#00ff41'">
+                &larr; RETURN HOME
+            </a>
         </div>
     </div>
 {% endblock %}

@@ -1,9 +1,25 @@
 {% extends "layouts/base.html" %}
 
+{% block style %}
+<style>
+    .mm-page-header {
+        font-family: 'Orbitron', sans-serif;
+        color: #00ff41;
+        font-size: 1.4rem;
+        letter-spacing: 3px;
+        text-shadow: 0 0 12px #00ff41;
+        margin-bottom: 4px;
+    }
+    .mm-page-sub { color: #00ff4188; font-size: 0.8rem; margin-bottom: 24px; }
+    .img-thumbnail { border: 1px solid #00ff4144 !important; background-color: #0a0a0a !important; }
+</style>
+{% endblock %}
+
 {% block body %}
 
 <div class="container mt-5">
-    <h1>User Management</h1>
+    <h1 class="mm-page-header">&#128100; USER MANAGEMENT</h1>
+    <p class="mm-page-sub">// Manage registered agents and their access levels</p>
 
     <table class="table table-striped" id="userTable">
         <thead>
@@ -69,7 +85,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Edit User</h5>
+                <h5 class="modal-title" style="font-family:'Orbitron',sans-serif;color:#00ff41;letter-spacing:2px;font-size:0.95rem;">&#9998; EDIT AGENT</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
