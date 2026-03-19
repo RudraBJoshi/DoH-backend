@@ -84,7 +84,9 @@ class OTPApi:
 
             if not smtp_user or not smtp_pass:
                 print(f"[OTP DEV] Code for {email}: {otp}")
-                return {'message': 'Verification code sent to your email'}, 200
+                is_prod = os.environ.get('IS_PRODUCTION', 'false').lower() == 'true'
+                dev_payload = {} if is_prod else {'dev_otp': otp}
+                return {'message': 'Verification code sent to your email', **dev_payload}, 200
 
             try:
                 msg = MIMEText(
@@ -189,7 +191,9 @@ class OTPApi:
 
             if not smtp_user or not smtp_pass:
                 print(f"[OTP DEV] Signup code for {email}: {otp}")
-                return {'message': 'Verification code sent to your email'}, 200
+                is_prod = os.environ.get('IS_PRODUCTION', 'false').lower() == 'true'
+                dev_payload = {} if is_prod else {'dev_otp': otp}
+                return {'message': 'Verification code sent to your email', **dev_payload}, 200
 
             try:
                 msg = MIMEText(
