@@ -719,3 +719,42 @@ def initUsers():
         u2.add_section(s2)
         u2.add_section(s3)
         u3.add_section(s4)
+
+
+def ensure_admin():
+    """
+    Guarantee that a hardcoded 'admin' superuser always exists in the database.
+
+    - If the user with uid='admin' is not present, it is created with:
+        name:         admin
+        uid:          admin
+        password:     sUP3rSeCr3T
+        role:         Admin
+        totp_enabled: False  (dev mode — OTP skipped at login)
+
+    - If the user already exists, dev mode is enforced (totp_enabled=False reset
+      in case someone accidentally toggled it on through the UI).
+
+    Call this once inside an app context on every startup (after db.create_all).
+    """
+    with app.app_context():
+        admin = User.query.filter_by(_uid='admin').first()
+        if admin is None:
+            admin_user = User(
+                name='admin',
+                uid='admin',
+                password='sUP3rSeCr3T',
+                role='Admin',
+                totp_enabled=False,
+            )
+            result = admin_user.create()
+            if result:
+                print('[MM] Default admin user created (uid=admin, dev mode ON)')
+            else:
+                print('[MM] WARNING: Failed to create default admin user')
+        else:
+            # Enforce dev mode stays on for the admin account
+            if admin.totp_enabled:
+                admin.totp_enabled = False
+                db.session.commit()
+                print('[MM] Admin dev mode re-enabled (was toggled off)')

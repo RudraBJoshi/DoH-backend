@@ -32,7 +32,7 @@ from api.game_social_api import game_social_api
 #from api.announcement import announcement_api ##temporary revert
 
 # database Initialization functions
-from model.user import User, initUsers
+from model.user import User, initUsers, ensure_admin
 from model.user import Section;
 from model.github import GitHubUser
 from model.feedback import Feedback
@@ -104,6 +104,7 @@ with app.app_context():
     if User.query.count() == 0:
         initUsers()   # only seed on first run — avoids duplicate/integrity errors on restart
     initJokes()
+    ensure_admin()    # guarantee admin superuser exists with dev mode on
 
 # Tell Flask-Login the view function name of your login route
 login_manager.login_view = "login"
