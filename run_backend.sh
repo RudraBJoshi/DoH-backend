@@ -15,7 +15,7 @@ if [ ! -d "venv" ]; then
 fi
 
 source venv/bin/activate
-echo "Backend running at http://localhost:8800"
+echo "Backend running at http://localhost:8242"
 echo ""
 python main.py
 
