@@ -288,9 +288,103 @@ class GroqAPI:
                 'api_key_configured': bool(api_key)
             }, 200
 
+    class _UESLChat(Resource):
+        """
+        UESL Coach chatbot - POST /api/uesl-chat
+        Pre-loaded with full UESL context so the frontend doesn't need to send a system prompt.
+        """
+        SYSTEM_PROMPT = """
+You are "UESL Coach", the friendly AI assistant for the Unified Esports League (UESL).
+Answer questions warmly and concisely. Stay on topic about UESL. If asked something unrelated, politely redirect.
+
+== ABOUT UESL ==
+Unified Esports League (UESL) helps people with intellectual and developmental disabilities (IDDs)
+build confidence, friendships, and real-world tech skills through gaming and esports — at no cost to SDRC clients.
+
+== MISSION ==
+Combine the excitement of esports with expert coaching to build social-emotional skills,
+teamwork, and real-world tech experience in a safe, supportive, year-round environment.
+
+== KEY FACTS ==
+- Ages: 8 and up
+- Coach-to-client ratio: 1:3 (very personalized support)
+- Cost: FREE for San Diego Regional Center (SDRC) clients (minimum 2 hours per location required)
+- Year-round program (closed Thanksgiving Nov 25-27, Christmas Dec 24-25, New Year's Day Jan 1)
+- 100+ participants, 7 tech centers across San Diego
+
+== LOCATIONS ==
+1. Rancho Bernardo — RB High School, 13010 Paseo Lucido, San Diego, CA 92128
+(Contact UESL for the full list of other locations and hours)
+
+== VALUES ==
+- Community: Team-based learning where every player belongs and grows together
+- Expert Coaching: Trained coaches provide personalized 1:3 support
+- Accessibility: Adaptive controls and inclusive tech for every ability level
+- Real Skills: Confidence, collaboration, and technology fluency that lasts a lifetime
+
+== GAMES ==
+- Focus on team-based, non-violent games that promote collaboration and social skills
+- Custom UESL Game Maker: participants can build and play their own accessible games
+
+== CONTACT ==
+- Website: unifiedesl.com
+- Spanish-language support: Wendy Munoz — (619) 354-0733 or wendy@unifiedesl.com
+- Donate: paypal.com/donate/?hosted_button_id=UYQT933YT3S32
+
+== HOW TO JOIN ==
+Contact UESL directly. Must be an SDRC client to receive free services. Commit to minimum 2 hours per location.
+
+Keep answers short (2-4 sentences max unless a list is helpful). Be encouraging and friendly.
+"""
+
+        def post(self):
+            try:
+                api_key = get_groq_api_key()
+                if not api_key:
+                    return {'success': False, 'error': 'GROQ_API_KEY not configured.'}, 500
+
+                data = request.get_json() or {}
+                user_messages = data.get('messages', [])
+
+                if not user_messages:
+                    return {'success': False, 'error': 'messages array is required'}, 400
+
+                response = requests.post(
+                    get_groq_server(),
+                    headers={
+                        'Authorization': f'Bearer {api_key}',
+                        'Content-Type': 'application/json'
+                    },
+                    json={
+                        "model": "llama-3.3-70b-versatile",
+                        "messages": [
+                            {"role": "system", "content": self.SYSTEM_PROMPT},
+                            *user_messages[-10:]
+                        ],
+                        "temperature": 0.7,
+                        "max_tokens": 400
+                    },
+                    timeout=60
+                )
+
+                if response.status_code == 200:
+                    api_data = response.json()
+                    return {
+                        'success': True,
+                        'reply': api_data['choices'][0]['message']['content']
+                    }, 200
+                else:
+                    return {'success': False, 'error': f'Groq error: {response.status_code}'}, response.status_code
+
+            except requests.Timeout:
+                return {'success': False, 'error': 'Request timed out'}, 504
+            except Exception as e:
+                return {'success': False, 'error': str(e)}, 500
+
     # Register all endpoints
     api.add_resource(_Generate, '/groq')           # Original endpoint
     api.add_resource(_Chat, '/groq/chat')          # Enhanced chat
     api.add_resource(_Analyze, '/groq/analyze')    # Text analysis
     api.add_resource(_Models, '/groq/models')      # List models
     api.add_resource(_Health, '/groq/health')      # Health check
+    api.add_resource(_UESLChat, '/uesl-chat')      # UESL Coach chatbot

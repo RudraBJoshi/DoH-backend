@@ -143,6 +143,29 @@ def login():
             error = 'Invalid username or password.'
     return render_template("login.html", error=error, next=next_page)
 
+
+@app.route('/google-login', methods=['POST'])
+def google_login():
+    credential = request.form.get('credential', '')
+    next_page = request.form.get('next', '')
+    if not credential:
+        return render_template("login.html", error='Google sign-in failed. Please try again.', next=next_page)
+    try:
+        from google.oauth2 import id_token
+        from google.auth.transport import requests as grequests
+        GOOGLE_CLIENT_ID = '714327350398-q7jtd45cknoa0ijsgsg0d0iedk7epqdo.apps.googleusercontent.com'
+        info = id_token.verify_oauth2_token(credential, grequests.Request(), GOOGLE_CLIENT_ID)
+        email = info.get('email', '').strip().lower()
+    except Exception:
+        return render_template("login.html", error='Invalid Google credential. Please try again.', next=next_page)
+    user = User.query.filter_by(_email=email, _auth_type='google').first()
+    if not user:
+        return render_template("login.html", error=f'No account found for {email}. Please sign up first.', next=next_page)
+    login_user(user)
+    if next_page and not is_safe_url(next_page):
+        return abort(400)
+    return redirect(next_page or url_for('index'))
+
 @app.route('/studytracker')  # route for the study tracker page
 def studytracker():
     return render_template("studytracker.html")
