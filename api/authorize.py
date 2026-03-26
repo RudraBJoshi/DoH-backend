@@ -35,44 +35,42 @@ def auth_required(roles=None):
             user = None
             auth_method = None
             
-            # Method 1: Try Flask-Login session authentication first
-            if current_user.is_authenticated:
-                user = current_user
-                auth_method = "session"
-                # Set g.current_user for consistency across both auth methods
-                g.current_user = user
-            
-            # Method 2: Fall back to JWT token authentication
-            else:
-                token = request.cookies.get(current_app.config.get("JWT_TOKEN_NAME"))
-                # Also check Authorization: Bearer <token> header
-                if not token:
-                    auth_header = request.headers.get("Authorization", "")
-                    if auth_header.startswith("Bearer "):
-                        token = auth_header[7:]
-                if not token:
+            # Method 1: JWT token cookie / Bearer header (always checked first for API calls)
+            token = request.cookies.get(current_app.config.get("JWT_TOKEN_NAME"))
+            # Also check Authorization: Bearer <token> header
+            if not token:
+                auth_header = request.headers.get("Authorization", "")
+                if auth_header.startswith("Bearer "):
+                    token = auth_header[7:]
+
+            if not token:
+                # Method 2: Fall back to Flask-Login session (no JWT present at all)
+                if current_user.is_authenticated:
+                    user = current_user
+                    auth_method = "session"
+                    g.current_user = user
+                else:
                     return {
                         "message": "Authentication required. No session or token found.",
                         "data": None,
                         "error": "Unauthorized"
                     }, 401
-                
+            else:
                 try:
-                    # Decode the token and retrieve the user data
+                    # Decode the JWT token
                     data = jwt.decode(token, current_app.config["SECRET_KEY"], algorithms=["HS256"])
                     user = User.query.filter_by(_uid=data["_uid"]).first()
-                    
+
                     if user is None:
                         return {
                             "message": "Invalid Authentication token!",
                             "data": None,
                             "error": "Unauthorized"
                         }, 401
-                    
+
                     auth_method = "jwt"
-                    # Set the current_user in the global context
                     g.current_user = user
-                
+
                 except jwt.ExpiredSignatureError:
                     return {
                         "message": "Token has expired!",
