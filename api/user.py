@@ -2,7 +2,7 @@ import jwt
 from flask import Blueprint, app, request, jsonify, current_app, Response, g
 from flask_restful import Api, Resource # used for REST API building
 from flask_login import logout_user
-from datetime import datetime
+from datetime import datetime, date
 from __init__ import app, db
 from api.authorize import token_required
 from model.user import User
@@ -117,10 +117,23 @@ class UserAPI:
             }
             
             # Add optional fields if they exist
-            if body.get('sid'):
-                cleaned_body['sid'] = body.get('sid')
-            if body.get('school'):
-                cleaned_body['school'] = body.get('school')
+            if body.get('birthdate'):
+                cleaned_body['birthdate'] = body.get('birthdate')
+            if body.get('location'):
+                cleaned_body['location'] = body.get('location')
+            # If user is a minor (under 18), parent_email is required
+            if body.get('birthdate'):
+                try:
+                    bdate = datetime.strptime(body.get('birthdate'), '%Y-%m-%d').date()
+                    today = date.today()
+                    age = today.year - bdate.year - ((today.month, today.day) < (bdate.month, bdate.day))
+                    if age < 18:
+                        parent_email = body.get('parent_email')
+                        if not parent_email:
+                            return {'message': 'Parent/guardian email is required for users under 18'}, 400
+                        cleaned_body['parent_email'] = parent_email
+                except ValueError:
+                    return {'message': 'Invalid birthdate format. Use YYYY-MM-DD'}, 400
             if body.get('kasm_server_needed') is not None:
                 cleaned_body['kasm_server_needed'] = body.get('kasm_server_needed')
             if body.get('auth_type') is not None:
@@ -579,56 +592,56 @@ class UserAPI:
 
     class _School(Resource):
         """
-        School data API operations
+        Location data API operations
         """
 
         @token_required()
         def get(self):
             """
-            Get the school data for a user.
+            Get the location data for a user.
             """
             current_user = g.current_user
 
-            # If request includes a UID parameter and user is admin, get that user's school data
+            # If request includes a UID parameter and user is admin, get that user's location data
             uid = request.args.get('uid')
             if current_user.role == 'Admin' and uid:
                 user = User.query.filter_by(_uid=uid).first()
                 if not user:
                     return {'message': f'User {uid} not found'}, 404
             else:
-                user = current_user  # Get the current user's school data
+                user = current_user  # Get the current user's location data
 
-            return jsonify({'uid': user.uid, 'school': user.school})
+            return jsonify({'uid': user.uid, 'location': user.location})
 
         @token_required()
         def post(self):
             """
-            Add or update school data for a user.
+            Add or update location data for a user.
             """
             current_user = g.current_user
             body = request.get_json()
 
-            # Determine which user's school data to update
+            # Determine which user's location data to update
             uid = body.get('uid')
             if current_user.role == 'Admin' and uid:
                 user = User.query.filter_by(_uid=uid).first()
                 if not user:
                     return {'message': f'User {uid} not found'}, 404
             else:
-                # Non-admins can only update their own school data
+                # Non-admins can only update their own location data
                 if uid and uid != current_user.uid and current_user.role != 'Admin':
-                    return {'message': 'Permission denied: You can only update your own school data'}, 403
+                    return {'message': 'Permission denied: You can only update your own location data'}, 403
                 user = current_user
 
-            # Get the school data from the request
-            school = body.get('school')
-            if not school:
-                return {'message': 'School data is missing'}, 400
+            # Get the location data from the request
+            location = body.get('location')
+            if not location:
+                return {'message': 'Location data is missing'}, 400
 
-            # Update the user's school data
-            user.update({'school': school})
+            # Update the user's location data
+            user.update({'location': location})
 
-            return jsonify({'message': 'School data updated successfully', 'uid': user.uid, 'school': user.school})
+            return jsonify({'message': 'Location data updated successfully', 'uid': user.uid, 'location': user.location})
 
     class _GuestCRUD(Resource):
         """
@@ -661,8 +674,6 @@ class UserAPI:
             # Auto-generate required fields for guest accounts
             name = f"Guest_{uid}"
             email = "?"
-            sid = "?"
-            school = "?"
 
             # Create User object with auto-generated name
             user_obj = User(name=name, uid=uid, password=password)
@@ -673,8 +684,8 @@ class UserAPI:
                 'uid': uid,
                 'password': password,
                 'email': email,
-                'sid': sid,
-                'school': school,
+                'birthdate': None,
+                'location': "Unknown",
                 'kasm_server_needed': False
             }
             if body.get('class') is not None:

@@ -132,7 +132,7 @@ class User(db.Model, UserMixin):
         _name (Column): A string representing the user's name. It is not unique and cannot be null.
         _uid (Column): A unique string identifier for the user, cannot be null.
         _email (Column): A string representing the user's email address. It is not unique and cannot be null.
-        _sid (Column): A string representing the user's student ID. It is not unique and can be null.
+        _birthdate (Column): A string representing the user's birthdate (YYYY-MM-DD). It is not unique and can be null.
         _password (Column): A string representing the hashed password of the user. It is not unique and cannot be null.
         _role (Column): A string representing the user's role within the application. Defaults to "User".
         _pfp (Column): A string representing the path to the user's profile picture. It can be null.
@@ -140,7 +140,8 @@ class User(db.Model, UserMixin):
         sections (Relationship): A many-to-many relationship between users and sections, allowing users to be associated with multiple sections.
         _grade_data (Column): A JSON object representing the user's grade data.
         _ap_exam (Column): A JSON object representing the user's AP exam data.
-        _school (Column): A string representing the user's school, defaults to "Unknown".
+        _location (Column): A string representing the user's location, defaults to "Unknown".
+        _parent_email (Column): A string representing the parent's email, required for minor users.
     """
     __tablename__ = 'users'
 
@@ -148,7 +149,7 @@ class User(db.Model, UserMixin):
     _name = db.Column(db.String(255), unique=False, nullable=False)
     _uid = db.Column(db.String(255), unique=True, nullable=False)
     _email = db.Column(db.String(255), unique=False, nullable=False)
-    _sid = db.Column(db.String(255), unique=False, nullable=True)
+    _birthdate = db.Column(db.String(10), unique=False, nullable=True)
     _password = db.Column(db.String(255), unique=False, nullable=False)
     _role = db.Column(db.String(20), default="User", nullable=False)
     _pfp = db.Column(db.String(255), unique=False, nullable=True)
@@ -157,7 +158,8 @@ class User(db.Model, UserMixin):
     _grade_data = db.Column(db.JSON, unique=False, nullable=True)
     _ap_exam = db.Column(db.JSON, unique=False, nullable=True)
     _class = db.Column(db.JSON, unique=False, nullable=True)
-    _school = db.Column(db.String(255), default="Unknown", nullable=True)
+    _location = db.Column(db.String(255), default="Unknown", nullable=True)
+    _parent_email = db.Column(db.String(255), unique=False, nullable=True)
     _auth_type = db.Column(db.String(20), default="otp", nullable=False)
 
     # Define many-to-many relationship with Section model through UserSection table
@@ -172,11 +174,12 @@ class User(db.Model, UserMixin):
     personas = db.relationship('Persona', secondary='user_personas', lazy='subquery',
                                overlaps="user_personas_rel,persona,users")
     
-    def __init__(self, name, uid, password=app.config["DEFAULT_PASSWORD"], kasm_server_needed=False, totp_enabled=True, role="User", pfp='', grade_data=None, ap_exam=None, school="Unknown", sid=None, classes=None, auth_type="otp"):
+    def __init__(self, name, uid, password=app.config["DEFAULT_PASSWORD"], kasm_server_needed=False, totp_enabled=True, role="User", pfp='', grade_data=None, ap_exam=None, location="Unknown", birthdate=None, parent_email=None, classes=None, auth_type="otp"):
         self._name = name
         self._uid = uid
         self._email = "?"
-        self._sid = sid
+        self._birthdate = birthdate
+        self._parent_email = parent_email
         self.set_password(password)
         self.kasm_server_needed = kasm_server_needed
         self.totp_enabled = totp_enabled
@@ -187,7 +190,7 @@ class User(db.Model, UserMixin):
         # _class stores a list of class abbreviations the user belongs to (e.g. CSSE, CSP, CSA)
         # keep it as a JSON column in the DB
         self._class = classes if classes is not None else []
-        self._school = school
+        self._location = location
         self._auth_type = auth_type
 
     # UserMixin/Flask-Login requires a get_id method to return the id as a string
@@ -250,15 +253,25 @@ class User(db.Model, UserMixin):
     def uid(self, uid):
         self._uid = uid
 
-    # Student ID getter method
+    # Birthdate getter method
     @property
-    def sid(self):
-        return self._sid
+    def birthdate(self):
+        return self._birthdate
 
-    # Student ID setter function
-    @sid.setter
-    def sid(self, sid):
-        self._sid = sid
+    # Birthdate setter function
+    @birthdate.setter
+    def birthdate(self, birthdate):
+        self._birthdate = birthdate
+
+    # Parent email getter method
+    @property
+    def parent_email(self):
+        return self._parent_email
+
+    # Parent email setter function
+    @parent_email.setter
+    def parent_email(self, parent_email):
+        self._parent_email = parent_email
 
     # check if uid parameter matches user id in object, return boolean
     def is_uid(self, uid):
@@ -338,12 +351,12 @@ class User(db.Model, UserMixin):
         self._ap_exam = ap_exam if ap_exam is not None else {}
 
     @property
-    def school(self):
-        return self._school
+    def location(self):
+        return self._location
 
-    @school.setter
-    def school(self, school):
-        self._school = school
+    @location.setter
+    def location(self, location):
+        self._location = location
 
     # CRUD create/add a new record to the table
     # returns self or None on error
@@ -366,7 +379,7 @@ class User(db.Model, UserMixin):
             "uid": self.uid,
             "name": self.name,
             "email": self.email,
-            "sid": self.sid,
+            "birthdate": self.birthdate,
             "role": self.role,
             "pfp": self.pfp,
             "class": self._class if self._class is not None else [],
@@ -376,7 +389,8 @@ class User(db.Model, UserMixin):
             "grade_data": self.grade_data,
             "ap_exam": self.ap_exam,
             "password": self._password,  # Only for internal use, not for API
-            "school": self.school
+            "location": self.location,
+            "parent_email": self.parent_email
         }
         sections = self.read_sections()
         data.update(sections)
@@ -393,7 +407,8 @@ class User(db.Model, UserMixin):
         name = inputs.get("name", "")
         uid = inputs.get("uid", "")
         email = inputs.get("email", "")
-        sid = inputs.get("sid", "")
+        birthdate = inputs.get("birthdate", "")
+        parent_email = inputs.get("parent_email", None)
         password = inputs.get("password", "")
         pfp = inputs.get("pfp", None)
         kasm_server_needed = inputs.get("kasm_server_needed", None)
@@ -401,7 +416,7 @@ class User(db.Model, UserMixin):
         grade_data = inputs.get("grade_data", None)
         ap_exam = inputs.get("ap_exam", None)
         class_list = inputs.get("class", None) or inputs.get("_class", None)
-        school = inputs.get("school", None)
+        location = inputs.get("location", None)
         auth_type = inputs.get("auth_type", None)
         # States before update
         old_uid = self.uid
@@ -414,8 +429,10 @@ class User(db.Model, UserMixin):
             self.set_uid(uid)
         if email:
             self.email = email
-        if sid:
-            self.sid = sid
+        if birthdate:
+            self.birthdate = birthdate
+        if parent_email is not None:
+            self.parent_email = parent_email
         if password:
             self.set_password(password)
         if pfp is not None:
@@ -434,8 +451,8 @@ class User(db.Model, UserMixin):
                 self._class = [class_list]
             else:
                 self._class = class_list
-        if school is not None:
-            self.school = school
+        if location is not None:
+            self.location = location
         if auth_type is not None:
             self._auth_type = auth_type
 
