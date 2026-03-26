@@ -10,7 +10,7 @@ if [ ! -d "venv" ]; then
     python3 -m venv venv
     echo "Installing dependencies..."
     venv/bin/pip install --quiet Flask Flask-Login Flask-SQLAlchemy Flask-Migrate \
-        Flask-RESTful Flask-Cors PyJWT python-dotenv Werkzeug requests pymysql
+        Flask-RESTful Flask-Cors PyJWT python-dotenv Werkzeug requests pymysql flask-socketio
     echo "Done."
 fi
 

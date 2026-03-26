@@ -3,6 +3,7 @@ from flask_login import LoginManager
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_socketio import SocketIO
 from dotenv import load_dotenv
 import os
 
@@ -15,7 +16,7 @@ load_dotenv()
 app = Flask(__name__)
 
 # Configure Flask Port, default to 8587 which is same as Docker setup
-app.config['FLASK_PORT'] = int(os.environ.get('FLASK_PORT') or 8800)
+app.config['FLASK_PORT'] = int(os.environ.get('FLASK_PORT') or 8424)
 
 # Configure Flask to handle JSON with UTF-8 encoding versus default ASCII
 app.config['JSON_AS_ASCII'] = False  # Allow emojis, non-ASCII characters in JSON responses
@@ -56,6 +57,9 @@ def handle_preflight():
         response.status_code = 200
         return response
 
+
+# Socket.IO for real-time multiplayer
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', logger=False, engineio_logger=False)
 
 # Admin Defaults
 app.config['ADMIN_USER'] = os.environ.get('ADMIN_USER') or 'Admin Name'

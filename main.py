@@ -9,7 +9,7 @@ from flask import current_app
 from dotenv import load_dotenv
 
 # import "objects" from "this" project
-from __init__ import app, db, login_manager  # Key Flask objects 
+from __init__ import app, db, login_manager, socketio  # Key Flask objects
 # API endpoints
 from api.user import user_api 
 from api.python_exec_api import python_exec_api
@@ -29,6 +29,7 @@ from api.post import post_api  # Import the social media post API
 from api.otp_api import otp_api
 from api.game_api import game_api
 from api.game_social_api import game_social_api
+import api.multiplayer  # registers Socket.IO event handlers
 #from api.announcement import announcement_api ##temporary revert
 
 # database Initialization functions
@@ -371,5 +372,5 @@ app.cli.add_command(custom_cli)
 if __name__ == "__main__":
     host = "0.0.0.0"
     port = app.config['FLASK_PORT']
-    print(f"** Server running: http://localhost:{port}")  # Pretty link
-    app.run(debug=True, host=host, port=port, use_reloader=False)
+    print(f"** Server running: http://localhost:{port}")
+    socketio.run(app, debug=True, host=host, port=port, use_reloader=False, allow_unsafe_werkzeug=True)
