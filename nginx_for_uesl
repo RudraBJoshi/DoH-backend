@@ -20,10 +20,13 @@ server {
         proxy_set_header Host $host;
 
         set $cors_origin "";
-        if ($http_origin ~* "^https://(.*\.)?simplegame\.com$") {
+        if ($http_origin ~* "^https://(.*\.)?uesl\.io$") {
             set $cors_origin $http_origin;
         }
-        if ($http_origin = "https://open-coding-society.github.io") {
+        if ($http_origin = "https://unified-esports-league.github.io") {
+            set $cors_origin $http_origin;
+        }
+        if ($http_origin = "https://uesl.opencodingsociety.com") {
             set $cors_origin $http_origin;
         }
 
