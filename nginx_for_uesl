@@ -3,9 +3,9 @@ server {
     listen [::]:80;
     server_name uesl.opencodingsociety.com;
 
-    # Proxy Socket.IO connections to 8500
+    # Proxy Socket.IO connections to 8501
     location /socket.io/ {
-        proxy_pass http://localhost:8500;
+        proxy_pass http://localhost:8501;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";

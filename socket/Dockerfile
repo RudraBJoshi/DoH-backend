@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 COPY . /app
 
-EXPOSE 8500
+EXPOSE 8501
 
 ENV FLASK_ENV=production
 
