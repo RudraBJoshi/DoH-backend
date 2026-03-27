@@ -1,45 +1,37 @@
-# Use official Python image as base image
+# Use official Python slim image
 FROM python:3.12-slim
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies and clean up apt cache
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    nodejs \
-    npm && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Copy application code into the container
-COPY . /app
-
-# Upgrade pip and install dependencies
+# Install Python dependencies before copying app code
+# (layer is cached unless requirements.txt changes)
+COPY requirements.txt /app/requirements.txt
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install gunicorn
 
-# Create non-privileged user and set file permissions
+# Copy application code
+COPY . /app
+
+# Create non-privileged user and set permissions
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app && \
     chmod -R 755 /app && \
-    # Make code directories read-only for appuser (prevent code modification)
-    chmod -R 555 /app/model && \
-    chmod -R 555 /app/api && \
-    # Keep /app/instance writable for database and uploads
-    chmod -R 755 /app/instance && \
-    # Restrict access to /proc to prevent reading parent process env vars
-    chmod 700 /proc 2>/dev/null || true
+    # Keep instance folder writable for SQLite DB and uploads
+    chmod -R 775 /app/instance
 
 # Switch to non-privileged user
 USER appuser
 
-# Set environment variables
+# Port must match FLASK_PORT in .env and the docker-compose mapping
 ENV FLASK_ENV=production \
-    GUNICORN_CMD_ARGS="--workers=5 --threads=2 --bind=0.0.0.0:8587 --timeout=30 --access-logfile -"
+    GUNICORN_CMD_ARGS="--workers=2 --threads=2 --bind=0.0.0.0:8424 --timeout=60 --access-logfile -"
 
-# Expose application port
-EXPOSE 8587
+EXPOSE 8424
 
-# Start Gunicorn server
+# Health check so docker-compose ps shows a real status
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8424/')" || exit 1
+
 CMD ["gunicorn", "main:app"]

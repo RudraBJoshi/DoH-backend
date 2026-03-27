@@ -33,7 +33,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from main import app, db, initUsers
 
 # Base URL for production server
-BASE_URL = "https://flask.opencodingsociety.com"
+BASE_URL = "https://uesl.opencodingsociety.com"
 
 # API Endpoint for comprehensive data export
 # API Endpoints for chunked data export (one per data type)

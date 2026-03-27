@@ -38,7 +38,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from main import app, db
 
 # Configuration
-BASE_URL = "https://flask.opencodingsociety.com"
+BASE_URL = "https://uesl.opencodingsociety.com"
 PROD_AUTH_URL = f"{BASE_URL}/api/authenticate"
 LOCAL_JSON = "instance/data.json"
 
