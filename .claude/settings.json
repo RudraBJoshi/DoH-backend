@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Read(//home/rudra/coding/Tri3/**)"
+      "Read(//home/rudra/coding/Tri3/**)",
+      "Bash(grep -r \"gemini\\\\|groq\\\\|GEMINI\\\\|GROQ\" /home/darshan/pages --include=*.py -l)",
+      "Bash(find /home/darshan/pages -name *.py -path */api/*)"
     ],
     "additionalDirectories": [
       "/home/rudra/coding/Tri3/MalwareMadness/navigation/authentication"

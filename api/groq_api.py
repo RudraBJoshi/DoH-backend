@@ -102,7 +102,7 @@ class GroqAPI:
     class _Generate(Resource):
         """
         Original endpoint - POST /api/groq
-        Kept for backwards compatibility.
+        Matches opencs/pages baseline pattern exactly.
         """
         def post(self):
             body = request.get_json()
@@ -111,13 +111,13 @@ class GroqAPI:
             if not messages:
                 return {'message': 'Missing "messages" in request body'}, 400
 
-            api_key = get_groq_api_key()
+            api_key = current_app.config.get('GROQ_API_KEY')
             if not api_key:
-                return {'message': 'GROQ_API_KEY not configured. Add it to .env file.'}, 500
+                return {'message': 'API key not configured'}, 500
 
             try:
                 response = requests.post(
-                    get_groq_server(),
+                    "https://api.groq.com/openai/v1/chat/completions",
                     headers={
                         'Authorization': f'Bearer {api_key}',
                         'Content-Type': 'application/json'
@@ -126,13 +126,10 @@ class GroqAPI:
                         "model": body.get('model', DEFAULT_MODEL),
                         "messages": messages,
                         "temperature": body.get('temperature', 0.7)
-                    },
-                    timeout=60
+                    }
                 )
                 response.raise_for_status()
-                return response.json(), 200
-            except requests.Timeout:
-                return {'message': 'Request timed out'}, 504
+                return jsonify(response.json())
             except Exception as e:
                 return {'message': f'Error contacting Groq API: {str(e)}'}, 500
 
