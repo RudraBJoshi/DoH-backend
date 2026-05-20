@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request
 from flask_restful import Api, Resource
 from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
@@ -12,7 +12,7 @@ _api = Api(friendship_api)
 
 def _require_auth():
     if not current_user.is_authenticated:
-        return jsonify({'error': 'Unauthorized'}), 401
+        return {'error': 'Unauthorized'}, 401
     return None
 
 
