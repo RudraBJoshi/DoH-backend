@@ -30,11 +30,13 @@ from api.otp_api import otp_api
 from api.game_api import game_api
 from api.game_social_api import game_social_api
 from api.presence_api import presence_api
+from api.friendship_api import friendship_api
 import api.multiplayer  # registers Socket.IO event handlers
 #from api.announcement import announcement_api ##temporary revert
 
 # database Initialization functions
 from model.user import User, initUsers, ensure_admin
+from model.friendship import FriendRequest
 from model.user import Section;
 from model.github import GitHubUser
 from model.feedback import Feedback
@@ -91,6 +93,7 @@ app.register_blueprint(otp_api)
 app.register_blueprint(game_api)
 app.register_blueprint(game_social_api)
 app.register_blueprint(presence_api)
+app.register_blueprint(friendship_api)
 # app.register_blueprint(announcement_api) ##temporary revert
 
 # Startup initialization — create tables and seed default data on first run
