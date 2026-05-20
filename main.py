@@ -29,6 +29,7 @@ from api.post import post_api  # Import the social media post API
 from api.otp_api import otp_api
 from api.game_api import game_api
 from api.game_social_api import game_social_api
+from api.presence_api import presence_api
 import api.multiplayer  # registers Socket.IO event handlers
 #from api.announcement import announcement_api ##temporary revert
 
@@ -89,6 +90,7 @@ app.register_blueprint(post_api)  # Register the social media post API
 app.register_blueprint(otp_api)
 app.register_blueprint(game_api)
 app.register_blueprint(game_social_api)
+app.register_blueprint(presence_api)
 # app.register_blueprint(announcement_api) ##temporary revert
 
 # Startup initialization — create tables and seed default data on first run
