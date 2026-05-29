@@ -228,62 +228,58 @@ Server starts at **http://localhost:8424**.
 
 ## Environment Variables
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root. These are the only variables you need to get the platform running:
 
 ```env
-# Flask port (default: 8424)
-# FLASK_PORT=8424
+# --- Admin account (seeded on first db_init) ---
+ADMIN_USER='Your Name'
+ADMIN_UID='youruid'
+ADMIN_PASSWORD='YourPassword!'
 
-# Default password for password reset
-DEFAULT_PASSWORD='123Qwerty!'
-DEFAULT_PFP='default.png'
-
-# Admin user
-ADMIN_USER='Thomas Edison'
-ADMIN_UID='toby'
-ADMIN_PASSWORD='123Toby!'
-ADMIN_PFP='toby.png'
-
-# Teacher user
-TEACHER_USER='Nikola Tesla'
-TEACHER_UID='niko'
-TEACHER_PASSWORD='123Niko!'
-TEACHER_PFP='niko.png'
-
-# Default test user
-USER_NAME='Grace Hopper'
-USER_UID='hop'
-USER_PASSWORD='123Hop!'
-USER_PFP='hop.png'
-
-# Your personal admin account
-MY_NAME='Your Name'
-MY_UID='youruid'
-MY_ROLE='admin'
-
-# Groq AI — https://console.groq.com/keys
+# --- Groq AI (general chat + UESL chatbot) ---
+# Get a free key at https://console.groq.com/keys
 GROQ_API_KEY=gsk_xxxxxxxxxxxx
 GROQ_SERVER=https://api.groq.com/openai/v1/chat/completions
 
-# Google Gemini AI — https://aistudio.google.com/api-keys
+# --- Google Gemini AI (UESLCoach taunts + AI NPCs) ---
+# Get a free key at https://aistudio.google.com/api-keys
 GEMINI_API_KEY=xxxxx
 GEMINI_SERVER=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent
 
-# GitHub integration
-GITHUB_TOKEN=ghp_xxx
-GITHUB_TARGET_TYPE=user          # 'organization' or 'user'
-GITHUB_TARGET_NAME=unified-esports-league
+# --- OTP email (see OTP Setup section below) ---
+SMTP_USER=your-gmail@gmail.com
+SMTP_PASSWORD=your-app-password
 
-# KASM virtual desktops
-KASM_SERVER=https://kasm.opencodingsociety.com
-KASM_API_KEY=xxx
-KASM_API_KEY_SECRET=xxxx
-
-# Production database (AWS RDS)
-IS_PRODUCTION=false              # false = SQLite (local), true = MySQL (deployed)
-DB_USERNAME='admin'
-DB_PASSWORD='xxxxx'
+# --- Production database (leave false for local dev) ---
+IS_PRODUCTION=false
 ```
+
+---
+
+## OTP Setup
+
+OTP login sends a 6-digit code to the user's email via Gmail SMTP. To enable it you need a **dedicated Gmail account** — do not use a personal account.
+
+### Steps
+
+1. **Create a new Gmail account** — e.g. `uesl.noreply@gmail.com`. This is the address OTP emails will come from.
+
+2. **Enable 2-Step Verification** on that account:  
+   Google Account → Security → 2-Step Verification → Turn on
+
+3. **Generate an App Password**:  
+   Google Account → Security → 2-Step Verification → App passwords  
+   Name it anything (e.g. "UESL OTP"), copy the 16-character password.
+
+4. **Set your `.env`**:
+   ```env
+   SMTP_USER=uesl.noreply@gmail.com
+   SMTP_PASSWORD=abcd efgh ijkl mnop   # the 16-char app password (spaces ok)
+   ```
+
+5. **Test it**: start the server, register a user with `_auth_type='otp'`, and hit `POST /api/otp/send`. The code will arrive in their inbox — or print to the console if `SMTP_USER`/`SMTP_PASSWORD` are missing (dev fallback).
+
+> **Note**: the OTP store is in-memory (`_otp_store` dict in `api/otp_api.py`). Codes expire after 10 minutes and are wiped on server restart. If you need persistence across restarts, replace it with a Redis key or a DB-backed table.
 
 ---
 
