@@ -459,7 +459,7 @@ The following origins are allowed:
 
 ## Contributing
 
-This project is **retired** by the original team. If you want to build on it, use it as a template rather than forking:
+This project is **no longer actively maintained** by the original team and will be handed off to the next group. If you want to build on it, use it as a template rather than forking:
 
 1. Click **Use this template** on GitHub to create your own repo from this codebase
 2. Copy `.env.example` to `.env` and fill in your own API keys (Groq, Gemini, SMTP, etc.)
