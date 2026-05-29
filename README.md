@@ -48,7 +48,8 @@ This is the Flask REST API server for UESL. It provides authentication, user man
 
 These are the natural next features in priority order:
 
-1. **Persist OTP store to Redis** — the current in-memory dict is lost on any restart. Swap it for a Redis key with TTL so restarts don't break active login flows.
+1. **Restore Google account creation** — Google OAuth login works (`POST /google-login`) but the ability to **create a new account via Google** was accidentally removed when OTP was implemented. Users can only sign up with a password+OTP account and then link Google. The fix is in `api/user.py` — re-add the Google sign-up path so new users can register directly with their Google account.
+2. **Persist OTP store to Redis** — the current in-memory dict is lost on any restart. Swap it for a Redis key with TTL so restarts don't break active login flows.
 2. **Rate limiting on AI endpoints** — `/api/gemini` and `/api/ainpc/chat` are called frequently (coach calls every ~4.5 s per active game session). Add per-user rate limiting before Gemini API costs scale up.
 3. **Coach dashboard API** — teachers need a view of per-participant scores and session history. The data is already in `game_scores` and `games` tables; it just needs a filtered endpoint with teacher-role auth.
 4. **Migrate OTP secret storage** — `_otp_store` is not thread-safe under Gunicorn with multiple workers. Redis or a DB-backed token table is the right fix.
