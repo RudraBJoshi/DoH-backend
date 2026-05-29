@@ -12,7 +12,7 @@ This is the Flask REST API server for UESL. It provides authentication, user man
 
 ---
 
-## Handoff — Read This First
+## Project Status & Roadmap
 
 ### What's Built and Working
 
