@@ -7,7 +7,68 @@ This is the Flask REST API server for UESL. It provides authentication, user man
 - **API base**: `https://uesl.opencodingsociety.com`
 - **Local dev port**: `8424`
 - **Socket.IO port**: `8501` (separate Docker service)
-- **Frontend**: [MalwareMadness](https://github.com/unified-esports-league/MalwareMadness)
+- **Frontend repo**: [MalwareMadness](https://github.com/unified-esports-league/MalwareMadness) — Jekyll + GitHub Pages
+- **Live site**: https://ueslhub.opencodingsociety.com
+
+---
+
+## Handoff — Read This First
+
+### What's Built and Working
+
+| Feature | File | Status |
+|---|---|---|
+| JWT auth (HS256, 12 hr cookie) | `api/authorize.py`, `api/user.py` | ✅ Working |
+| OTP login (6-digit SMTP, 10-min TTL) | `api/otp_api.py` | ✅ Working |
+| Google OAuth login | `api/user.py` → `POST /google-login` | ✅ Working |
+| Game save/load/delete (upsert by name) | `api/game_api.py` | ✅ Working |
+| Community game gallery (public) | `GET /api/game/shared` | ✅ Working |
+| Per-game leaderboard (best-score-only) | `api/game_social_api.py` | ✅ Working |
+| Game comments (500 char limit, owner/admin delete) | `api/game_social_api.py` | ✅ Working |
+| 2-player co-op WebSocket rooms | `api/multiplayer.py` | ✅ Working |
+| Live leaderboard Socket.IO server | `socket/socket_server.py` (port 8501) | ✅ Working |
+| UESLCoach taunts (Gemini 2.5 Flash) | `api/gemini_api.py` → `POST /api/gemini` | ✅ Working |
+| AI NPC dialogue (Gemini 2.5 Flash) | `api/api_ainpc.py` → `POST /api/ainpc/chat` | ✅ Working |
+| General AI chat (Groq LLaMA 3.3-70b) | `api/groq_api.py` → `POST /api/groq/chat` | ✅ Working |
+| Friends + presence heartbeat | `api/friendship_api.py`, `api/presence_api.py` | ✅ Working |
+| DMs with image attachments | `api/social_api.py` → `GET/POST /api/messages/<uid>` | ✅ Working |
+| Profile pictures (base64, stored in User row) | `api/pfp.py` | ✅ Working |
+| Docker Compose deployment (web + socketio) | `docker-compose.yml` | ✅ Working |
+
+### Key Architecture Notes
+
+- **Two processes in production**: `web` (Flask/SocketIO, port 8424) and `socketio` (standalone leaderboard, port 8501). Both defined in `docker-compose.yml`.
+- **Database**: SQLite in dev (`instance/volumes/user_management.db`), MySQL on AWS RDS in prod. Toggle with `IS_PRODUCTION` env var.
+- **Auth flow**: every protected endpoint uses `@token_required(role)` from `api/authorize.py`. Checks JWT cookie → Bearer header → Flask-Login session, in that order.
+- **OTP store is in-memory** (`_otp_store` dict in `api/otp_api.py`) — it does not survive a server restart. If you restart the server mid-OTP flow, the user must re-request.
+- **Game upsert logic**: `Game.query.filter_by(user_id=user.id, name=name).first()` — re-saving the same game name overwrites `game_data` and `updated_at`. No duplicate rows.
+- **Multiplayer rooms are in-memory** (`_rooms` dict in `api/multiplayer.py`) — rooms don't persist across restarts. Max 2 players per room. Room ID is auto-generated 8-char uppercase string.
+
+### Where to Take Off From
+
+These are the natural next features in priority order:
+
+1. **Persist OTP store to Redis** — the current in-memory dict is lost on any restart. Swap it for a Redis key with TTL so restarts don't break active login flows.
+2. **Rate limiting on AI endpoints** — `/api/gemini` and `/api/ainpc/chat` are called frequently (coach calls every ~4.5 s per active game session). Add per-user rate limiting before Gemini API costs scale up.
+3. **Coach dashboard API** — teachers need a view of per-participant scores and session history. The data is already in `game_scores` and `games` tables; it just needs a filtered endpoint with teacher-role auth.
+4. **Migrate OTP secret storage** — `_otp_store` is not thread-safe under Gunicorn with multiple workers. Redis or a DB-backed token table is the right fix.
+5. **Spanish localization for AI chat** — the UESL chat endpoint (`/api/uesl-chat`) already has a system prompt; extend it to detect language and respond in Spanish when appropriate.
+6. **Tournament bracket model** — add a `Bracket` model to `model/` and REST endpoints so the frontend tournament page can create and update live brackets.
+7. **Push OTP expiry to DB** — current TTL logic uses `datetime` in memory. Moving it to a `pending_otp` table makes it auditable and restart-safe.
+
+### Running Locally
+
+```bash
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # fill in your API keys
+python scripts/db_init.py
+python main.py         # http://localhost:8424
+```
+
+See [Environment Variables](#environment-variables) for required `.env` keys.
+
+---
 
 ---
 
