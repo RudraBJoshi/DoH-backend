@@ -85,13 +85,9 @@ See [Environment Variables](#environment-variables) for required `.env` keys.
   - [Gemini AI](#gemini-ai)
   - [Game](#game)
   - [Social & Presence](#social--presence)
-  - [Microblog](#microblog)
-  - [Classroom & Study](#classroom--study)
   - [Analytics](#analytics)
-  - [Other](#other)
 - [Database](#database)
 - [Socket.IO Multiplayer](#socketio-multiplayer)
-- [KASM Integration](#kasm-integration)
 - [Docker Deployment](#docker-deployment)
 - [Production Database Management](#production-database-management)
 - [Contributing](#contributing)
@@ -132,40 +128,24 @@ MalwareMadness-backend/
 │   ├── authorize.py         # @auth_required() decorator
 │   ├── user.py              # /api/authenticate, /api/id, /api/user
 │   ├── groq_api.py          # /api/groq, /api/uesl-chat, /api/groq/analyze
-│   ├── gemini_api.py        # /api/gemini
-│   ├── game_api.py          # /api/games, /api/scores
-│   ├── game_social_api.py   # /api/game-comments, game social features
+│   ├── gemini_api.py        # /api/gemini (UESLCoach taunts)
+│   ├── api_ainpc.py         # /api/ainpc/chat (AI NPC dialogue)
+│   ├── game_api.py          # /api/game/* (save, load, shared gallery)
+│   ├── game_social_api.py   # /api/game/score, leaderboard, comments
 │   ├── presence_api.py      # /api/heartbeat, /api/active-users
-│   ├── friendship_api.py    # /api/friendship/*
-│   ├── microblog_api.py     # /api/microblog, /api/microblog/reply, /api/microblog/reaction
-│   ├── post.py              # /api/post (social media posts)
-│   ├── classroom_api.py     # /api/classroom
-│   ├── study.py             # /api/study
+│   ├── friendship_api.py    # /api/friends/*
+│   ├── social_api.py        # /api/messages/<uid> (DMs)
 │   ├── analytics.py         # /api/analytics
-│   ├── feedback_api.py      # /api/feedback
-│   ├── section.py           # /api/section
-│   ├── student.py           # /api/student
-│   ├── persona_api.py       # /api/persona
-│   ├── pfp.py               # /api/pfp (profile picture upload)
-│   ├── otp_api.py           # /api/otp (one-time password)
-│   ├── python_exec_api.py   # /api/python (code execution)
-│   ├── javascript_exec_api.py # /api/javascript (code execution)
-│   ├── data_export_import_api.py # /api/export, /api/import
-│   └── multiplayer.py       # Socket.IO event handlers
+│   ├── pfp.py               # /api/id/pfp (profile picture)
+│   ├── otp_api.py           # /api/otp/* (one-time password)
+│   └── multiplayer.py       # Socket.IO co-op room events
 │
 ├── model/                   # SQLAlchemy database models
-│   ├── user.py              # User, Section — initUsers(), ensure_admin()
+│   ├── user.py              # User — initUsers(), ensure_admin()
 │   ├── friendship.py        # FriendRequest
 │   ├── game.py              # Game
 │   ├── game_score.py        # GameScore
-│   ├── game_comment.py      # GameComment
-│   ├── microblog.py         # MicroBlog, Topic — initMicroblogs()
-│   ├── persona.py           # Persona — initPersonas(), initPersonaUsers()
-│   ├── post.py              # Post — init_posts()
-│   ├── classroom.py         # Classroom
-│   ├── study.py             # Study — initStudies()
-│   ├── github.py            # GitHubUser
-│   └── feedback.py          # Feedback
+│   └── game_comment.py      # GameComment
 │
 ├── hacks/
 │   ├── joke.py              # /api/jokes blueprint
@@ -354,59 +334,17 @@ All Groq endpoints use model `llama-3.3-70b-versatile` by default.
 |---|---|---|---|
 | POST | `/api/heartbeat` | Yes | Update online presence (call every ~120s) |
 | GET | `/api/active-users` | Yes | Get list of users active in last 5 minutes |
-| POST | `/api/friendship/request` | Yes | Send a friend request |
-| PUT | `/api/friendship/respond` | Yes | Accept or decline a friend request |
-| GET | `/api/friendship/list` | Yes | Get friends list |
-| DELETE | `/api/friendship/<id>` | Yes | Remove a friend |
-| GET | `/api/post/all` | No | Get all social posts |
-| POST | `/api/post` | Yes | Create a social post |
-| PUT | `/api/post` | Yes | Update a post |
-| DELETE | `/api/post` | Yes | Delete a post |
-
-### Microblog
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/api/microblog` | Yes | Create new microblog post |
-| GET | `/api/microblog` | No | Get posts (filters: `?topicId=`, `?userId=`, `?search=`, `?limit=`) |
-| PUT | `/api/microblog` | Yes | Update a microblog post |
-| DELETE | `/api/microblog` | Yes | Delete a microblog post |
-| POST | `/api/microblog/reply` | Yes | Add reply to a post |
-| POST | `/api/microblog/reaction` | Yes | Add reaction (👍 ❤️ etc.) |
-| DELETE | `/api/microblog/reaction` | Yes | Remove a reaction |
-| GET | `/api/microblog/page/<page_key>` | No | Get posts for a specific page |
-| POST | `/api/microblog/topics/auto-create` | Yes | Auto-create a topic for a page |
-| GET | `/api/microblog/topics?pagePath=X` | No | Get topic by page path |
-
-### Classroom & Study
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/api/classroom` | Yes | List classrooms |
-| POST | `/api/classroom` | Yes (Admin) | Create classroom |
-| GET | `/api/study` | Yes | Get study sessions |
-| POST | `/api/study` | Yes | Log a study session |
-| GET | `/api/section` | Yes | List sections |
-| GET | `/api/student` | Yes | List students |
-| GET | `/api/persona` | Yes | List personas |
+| POST | `/api/friends/request` | Yes | Send a friend request |
+| POST | `/api/friends/respond` | Yes | Accept or decline a friend request |
+| GET | `/api/friends` | Yes | Get friends list with online status |
+| GET | `/api/messages/<uid>` | Yes | Get DMs with a user |
+| POST | `/api/messages/<uid>` | Yes | Send a DM (text, emoji, or base64 image) |
 
 ### Analytics
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
 | GET | `/api/analytics` | Yes (Admin) | Site analytics (user registrations, activity) |
-
-### Other
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/api/jokes/` | No | Get a random joke |
-| POST | `/api/python` | Yes | Execute Python code snippet |
-| POST | `/api/javascript` | Yes | Execute JavaScript code snippet |
-| GET | `/api/export` | Yes (Admin) | Export database to CSV/JSON |
-| POST | `/api/import` | Yes (Admin) | Import database from CSV/JSON |
-| GET | `/api/feedback` | Yes | Get feedback entries |
-| POST | `/api/feedback` | Yes | Submit feedback |
 
 ---
 
@@ -417,19 +355,10 @@ All Groq endpoints use model `llama-3.3-70b-versatile` by default.
 | Model | Table | Key Fields |
 |---|---|---|
 | `User` | `users` | `_uid`, `_name`, `_email`, `_password`, `_role`, `_auth_type`, `_pfp` |
-| `Section` | `sections` | `_name`, `_abbreviation`, `_year` |
 | `FriendRequest` | `friend_requests` | `sender_id`, `receiver_id`, `status` |
-| `Game` | `games` | `name`, `description`, `created_by` |
-| `GameScore` | `game_scores` | `game_id`, `user_id`, `score`, `timestamp` |
-| `GameComment` | `game_comments` | `game_id`, `user_id`, `content` |
-| `MicroBlog` | `microblogs` | `_title`, `_content`, `_topic_id`, `_user_id` |
-| `Topic` | `topics` | `_name`, `_page_path` |
-| `Persona` | `personas` | `_name`, `_description`, `_attributes` |
-| `Post` | `posts` | `_title`, `_content`, `_user_id`, `_channel_id` |
-| `Classroom` | `classrooms` | `_name`, `_teacher_id` |
-| `Study` | `studies` | `_user_id`, `_duration`, `_subject`, `_timestamp` |
-| `Feedback` | `feedback` | `_user_id`, `_content`, `_rating` |
-| `GitHubUser` | `github_users` | `_username`, `_token`, `_user_id` |
+| `Game` | `games` | `name`, `game_data`, `user_id`, `updated_at` |
+| `GameScore` | `game_scores` | `game_id`, `user_id`, `score`, `levels_completed`, `played_at` |
+| `GameComment` | `game_comments` | `game_id`, `user_id`, `body`, `posted_at` |
 
 ### Dev vs. Production
 
@@ -443,8 +372,7 @@ All Groq endpoints use model `llama-3.3-70b-versatile` by default.
 On first run, `main.py` automatically:
 1. Runs `db.create_all()` to create all tables
 2. Calls `initUsers()` (only if user table is empty — avoids duplicates on restart)
-3. Calls `initJokes()` to seed joke data
-4. Calls `ensure_admin()` to guarantee an admin superuser exists
+3. Calls `ensure_admin()` to guarantee an admin superuser exists
 
 ---
 
@@ -455,24 +383,6 @@ Real-time multiplayer is handled by a **separate Socket.IO service** in `api/mul
 - Runs on port **8501** (separate Docker container)
 - Registered event handlers on the `socketio` instance from `__init__.py`
 - Frontend connects via `io('https://uesl.opencodingsociety.com:8501')` or `io('http://localhost:8501')` locally
-
----
-
-## KASM Integration
-
-UESL integrates with [KASM](https://www.kasmweb.com/) to provide virtual desktop environments:
-
-```env
-KASM_SERVER=https://kasm.opencodingsociety.com
-KASM_API_KEY=xxx
-KASM_API_KEY_SECRET=xxxx
-```
-
-**Routes**:
-- `GET /kasm_users` — list all KASM users with last session info (Admin only)
-- `DELETE /delete_user/<user_id>` — delete a KASM user (Admin only)
-
-KASM API calls use `POST /api/public/get_users` and `POST /api/public/delete_user` on the KASM server.
 
 ---
 
