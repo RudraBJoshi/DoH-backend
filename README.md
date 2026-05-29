@@ -85,7 +85,6 @@ See [Environment Variables](#environment-variables) for required `.env` keys.
   - [Gemini AI](#gemini-ai)
   - [Game](#game)
   - [Social & Presence](#social--presence)
-  - [Analytics](#analytics)
 - [Database](#database)
 - [Socket.IO Multiplayer](#socketio-multiplayer)
 - [Docker Deployment](#docker-deployment)
@@ -339,12 +338,6 @@ All Groq endpoints use model `llama-3.3-70b-versatile` by default.
 | GET | `/api/friends` | Yes | Get friends list with online status |
 | GET | `/api/messages/<uid>` | Yes | Get DMs with a user |
 | POST | `/api/messages/<uid>` | Yes | Send a DM (text, emoji, or base64 image) |
-
-### Analytics
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| GET | `/api/analytics` | Yes (Admin) | Site analytics (user registrations, activity) |
 
 ---
 
