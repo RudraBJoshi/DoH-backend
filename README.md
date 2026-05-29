@@ -561,11 +561,14 @@ The following origins are allowed:
 
 ## Contributing
 
-1. Fork the repository
-2. Create a branch: `git checkout -b feature/your-feature`
-3. Create a virtualenv and install deps: `pip install -r requirements.txt`
-4. Make your changes and test locally
-5. Submit a Pull Request to `main`
+This project is **retired** by the original team. If you want to build on it, use it as a template rather than forking:
+
+1. Click **Use this template** on GitHub to create your own repo from this codebase
+2. Copy `.env.example` to `.env` and fill in your own API keys (Groq, Gemini, SMTP, etc.)
+3. Run `python scripts/db_init.py` to initialize a fresh database
+4. The auth system, game API, social features, and Socket.IO multiplayer are all yours to extend
+
+If you're continuing UESL specifically, see the [Project Status & Roadmap](#project-status--roadmap) section for what's working and where to start.
 
 ### Adding a new API endpoint
 
