@@ -116,48 +116,46 @@ See [Environment Variables](#environment-variables) for required `.env` keys.
 
 ```
 MalwareMadness-backend/
-├── main.py                  # Entry point — registers blueprints, startup init, routes
+├── main.py                  # Entry point — registers blueprints, startup init
 ├── __init__.py              # Flask app factory — config, CORS, DB, Socket.IO, login
-├── requirements.txt         # Python dependencies
+├── requirements.txt
 ├── docker-compose.yml       # Two services: web (8424) and socketio (8501)
-├── Dockerfile               # Flask web service container
-├── .env                     # Secrets (not committed — see template below)
+├── Dockerfile
+├── .env                     # Secrets — see Environment Variables section
 │
-├── api/                     # All REST API blueprints
-│   ├── authorize.py         # @auth_required() decorator
-│   ├── user.py              # /api/authenticate, /api/id, /api/user
-│   ├── groq_api.py          # /api/groq, /api/uesl-chat, /api/groq/analyze
-│   ├── gemini_api.py        # /api/gemini (UESLCoach taunts)
-│   ├── api_ainpc.py         # /api/ainpc/chat (AI NPC dialogue)
-│   ├── game_api.py          # /api/game/* (save, load, shared gallery)
-│   ├── game_social_api.py   # /api/game/score, leaderboard, comments
+├── api/                     # REST API blueprints (one file per feature)
+│   ├── authorize.py         # @token_required(role) decorator used by all protected routes
+│   ├── user.py              # /api/authenticate, /api/id, /api/user, /google-login
+│   ├── otp_api.py           # /api/otp/send, /api/otp/verify
+│   ├── pfp.py               # /api/id/pfp (profile picture upload/serve)
+│   ├── groq_api.py          # /api/groq/chat, /api/uesl-chat (LLaMA 3.3-70b)
+│   ├── gemini_api.py        # /api/gemini (UESLCoach taunts — Gemini 2.5 Flash)
+│   ├── api_ainpc.py         # /api/ainpc/chat (AI NPC dialogue — Gemini 2.5 Flash)
+│   ├── game_api.py          # /api/game/save|list|load|delete|shared
+│   ├── game_social_api.py   # /api/game/score|leaderboard|comments
+│   ├── multiplayer.py       # Socket.IO co-op room events (create/join/update/disconnect)
 │   ├── presence_api.py      # /api/heartbeat, /api/active-users
-│   ├── friendship_api.py    # /api/friends/*
-│   ├── social_api.py        # /api/messages/<uid> (DMs)
-│   ├── analytics.py         # /api/analytics
-│   ├── pfp.py               # /api/id/pfp (profile picture)
-│   ├── otp_api.py           # /api/otp/* (one-time password)
-│   └── multiplayer.py       # Socket.IO co-op room events
+│   ├── friendship_api.py    # /api/friends/request|respond|list
+│   └── social_api.py        # /api/messages/<uid> (DMs with image attachments)
 │
-├── model/                   # SQLAlchemy database models
+├── model/                   # SQLAlchemy ORM models
 │   ├── user.py              # User — initUsers(), ensure_admin()
 │   ├── friendship.py        # FriendRequest
-│   ├── game.py              # Game
-│   ├── game_score.py        # GameScore
-│   └── game_comment.py      # GameComment
+│   ├── game.py              # Game (upsert by user_id + name)
+│   ├── game_score.py        # GameScore (best-score-only per user/game)
+│   └── game_comment.py      # GameComment (max 500 chars)
 │
-├── hacks/
-│   ├── joke.py              # /api/jokes blueprint
-│   └── jokes.py             # initJokes() seed data
+├── socket/
+│   └── socket_server.py     # Standalone leaderboard Socket.IO server (port 8501)
 │
-├── scripts/                 # Database management scripts
-│   ├── db_init.py           # Initialize DB + seed data
-│   ├── db_migrate-prod2sqlite.py   # Pull production DB to local
-│   └── db_restore-sqlite2prod.py   # Push local DB to production
+├── scripts/
+│   ├── db_init.py           # Initialize DB + seed admin account
+│   ├── db_migrate-prod2sqlite.py   # Pull production DB to local SQLite
+│   └── db_restore-sqlite2prod.py   # Push local SQLite to production
 │
 └── instance/
     └── volumes/
-        └── user_management.db  # SQLite dev database (auto-created)
+        └── user_management.db  # SQLite dev DB (auto-created on first run)
 ```
 
 ---
